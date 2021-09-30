@@ -1,4 +1,4 @@
-i"""
+"""
 # Parameters
 
 A `Parameter` is a special type of `Task` representing an input that can vary
@@ -20,6 +20,7 @@ For more information, see the [Parameter docs](/core/concepts/parameters.md).
 """
 
 from prefect import Flow, Parameter, task
+from prefect.storage import GitHub
 
 
 @task(log_stdout=True)
@@ -32,3 +33,5 @@ with Flow("Example: Parameters") as flow:
     y = Parameter("y", default=2)
 
     print_total(x, y, x + y)
+
+flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="test.py", access_token_secret="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")
