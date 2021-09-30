@@ -16,6 +16,5 @@ with Flow("example") as flow:
     print_data(data)
 
 flow.storage = GitHub(
-    repo="InTaVia/prefect-flows", path="test.py",                 # location of flow file in repo
-    access_token_secret="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"   # name of personal access token secret
+    repo="InTaVia/prefect-flows", path="test2.py",                 # location of flow file in repo
 )
