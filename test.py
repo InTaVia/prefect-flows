@@ -34,4 +34,4 @@ with Flow("Example: Parameters") as flow:
 
     print_total(x, y, x + y)
 
-flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="test.py", access_token_secret="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")
+flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="test.py")
