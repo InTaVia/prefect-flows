@@ -12,4 +12,4 @@ def print_envs():
 with Flow("Print envs") as flow:
     print_envs()
 
-flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="printevn_flow.py")
+flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="printenv_flow.py")
