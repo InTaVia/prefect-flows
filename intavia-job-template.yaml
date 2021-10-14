@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: intavia-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: intavia-flow
+        env:
+          - name: RDFDB_USER
+            valueFrom:
+              secretKeyRef:
+                name: intavia_platform_secrets
+                key: workflow_rdfdb_user
+          - name: RDFDB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: intavia_platform_secrets
+                key: workflow_rdfdb_password
+        volumeMounts:
+        - name: archive
+          mountPath: /archive
+      volumes:
+        - name: archive
+          hostPath:
+            path: /archive
