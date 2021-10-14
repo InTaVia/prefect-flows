@@ -32,7 +32,7 @@ def create_graph(pldf, chodf):
 
 @task
 def write_graph(g):
-    return functions.write_graph(TEMP_FOLDER + 'graph.ttl', g)
+    return functions.wrte_graph(TEMP_FOLDER + 'graph.ttl', g)
 
 
 with Flow("Mock data ingest flow") as flow:
@@ -43,7 +43,6 @@ with Flow("Mock data ingest flow") as flow:
     g = create_graph(pldf, chodf)
     write_graph(g)
 
-flow.register('intavia')
 
-#flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"})
-#flow.Storage = GitHub(repo="InTaVia/prefect-flows", path="ingest_mock_data_flow.py")
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"})
+flow.storage = GitHub(repo="InTaVia/prefect-flows", path="ingest_mock_data_flow.py")
