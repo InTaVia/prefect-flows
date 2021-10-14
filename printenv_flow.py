@@ -3,9 +3,11 @@ from prefect.storage import GitHub
 import os
 
 @task(log_stdout=True)
-def print_envs():
+def print_envs(a='test', b='test3'):
     for item, value in os.environ.items():
         print('{}: {}'.format(item, value))
+        print(a)
+        print(b)
     
 
 
