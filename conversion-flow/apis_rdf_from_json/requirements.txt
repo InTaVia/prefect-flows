@@ -1,0 +1,7 @@
+pandas
+requests
+seaborn
+matplotlib
+rdflib
+SPARQLWrapper
+lxml
