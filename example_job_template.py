@@ -1,6 +1,7 @@
 from prefect import task, Flow, Parameter
 from prefect.storage import GitHub
 from prefect.run_configs import KubernetesRun
+import os
 
 
 TEMP_FOLDER = '/tmp/'
@@ -13,6 +14,7 @@ def download_source_data(sources):
 
 @task(nout=2)
 def read_data(local_files):
+    print(os.environ.get("RDFDB_USER", "DIDNT work"))
     return "test", "test2"
 
 
