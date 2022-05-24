@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "prefect-flows"
+version = "0.1.0"
+description = ""
+authors = ["Matthias Schlögl <matthias.schloegl@oeaw.ac.at>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^1.4.1"
+rdflib = "^6.1.1"
+"SPARQLWrapper.skipssl" = "^1.8.9"
+requests = "^2.27.1"
+lxml = "^4.7.1"
+pprint36 = "^3.9.0"
+urllib3 = "^1.26.8"
+prefect = {extras = ["kubernetes"], version = "^1.2.1"}
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
