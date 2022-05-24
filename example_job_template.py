@@ -16,7 +16,7 @@ def read_data(local_files):
     return "test", "test2"
 
 
-with Flow("Mock data ingest flow") as flow:
+with Flow("Example flow path") as flow:
     sources = Parameter("Sources")
 
     local_files = download_source_data(sources)

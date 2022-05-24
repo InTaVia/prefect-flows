@@ -11,12 +11,12 @@ spec:
           - name: RDFDB_USER
             valueFrom:
               secretKeyRef:
-                name: intavia_platform_secrets
+                name: intavia-platform-secrets
                 key: workflow_rdfdb_user
           - name: RDFDB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: intavia_platform_secrets
+                name: intavia-platform-secrets
                 key: workflow_rdfdb_password
         volumeMounts:
         - name: archive
