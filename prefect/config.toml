@@ -1,0 +1,5 @@
+backend="server"
+[server]
+endpoint="http://apollo-prefect.acdh-cluster.arz.oeaw.ac.at/graphql"
+    [server.ui]
+    apollo_url="http://apollo-prefect.acdh-cluster.arz.oeaw.ac.at/graphql"
