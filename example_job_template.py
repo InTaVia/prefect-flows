@@ -23,5 +23,5 @@ with Flow("Example flow path") as flow:
     pldf, chodf = read_data(local_files)
     print(pldf, chodf)
 
-flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"}, job_template_path="intavia-job-template.yaml")
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"}, job_template_path="/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows", path="example_job_template.py")
