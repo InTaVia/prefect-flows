@@ -44,5 +44,5 @@ with Flow("Mock data ingest flow") as flow:
     write_graph(g)
 
 
-flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"})
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "pandas rdflib lxml SPARQLWrapper"}, labels=["intavia"])
 flow.storage = GitHub(repo="InTaVia/prefect-flows", path="ingest_mock_data_flow.py")
