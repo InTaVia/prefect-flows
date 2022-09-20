@@ -1,0 +1,66 @@
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX bd: <http://www.bigdata.com/rdf#>
+PREFIX idm: <https://www.intavia.org/idm/>
+PREFIX bioc: <http://www.ldf.fi/schema/bioc/>
+ 
+INSERT {
+  GRAPH <$namedGraph> {
+    ?painting a crm:E24_Physical_Human_Made_Thing,
+        idm:CHO_Proxy;
+        bioc:bearer_of ?paintingProductionEventRole .
+    ?paintingProductionEventRole a bioc:Thing_Role .
+    ?paintingProductionEvent bioc:occured_in_the_presence_of_in_role ?paintingProductionEventRole;
+        bioc:had_participant_in_role ?artistProductionEventRole .
+    ?artist bioc:bearer_of ?artistProductionEventRole .
+    ?artistProductionEventRole a bioc:Event_Role .
+    ?paintingProductionEvent crm:P4_has_time-span ?paintingProductionTimespan .
+    ?paintingProductionEvent a crm:E12_Production .
+    ?paintingProductionTimespan crm:P82a_begin_of_the_begin ?pInception .
+    ?paintingProductionTimespan crm:P82b_end_of_the_end ?pInception .
+    ?paintingProductionTimespan rdfs:label ?pInceptionLabel .
+    ?painting crm:P1_is_identified_by ?paintingAppelation .
+    ?paintingAppelation a crm:E41_E33_Linguistic_Appellation .
+    ?paintingAppelation rdfs:label ?paintingLabel .
+    ?painting rdfs:label ?paintingLabel
+  }
+} WHERE {    
+    {
+      SELECT ?artist ?painting ?paintingLabel ?paintingAppelation ?pInception ?paintingProductionEvent ?paintingProductionEventRole ?artistProductionEventRole ?paintingProductionTimespan (CONCAT(STR(YEAR(?pInception)), "-", STR(MONTH(?pInception)), "-", STR(DAY(?pInception))) as ?pInceptionLabel) {
+          {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
+                        ?artist rdfs:label ?artistLabel1 .
+                ?artist owl:sameAs ?artistUri .
+  FILTER(contains(str(?artistUri), "wikidata.org"))}
+                          ORDER BY ?artist
+                          LIMIT $limit
+                          OFFSET $offset
+          
+          }
+          SERVICE <https://query.wikidata.org/sparql> {
+            ?artistUri wdt:P800 ?painting .
+            ?painting wdt:P31 wd:Q3305213
+        BIND(REPLACE(STR(?painting), "http://www.wikidata.org/entity/", "https://www.intavia.org/productionthingrole/") as ?paintingProductionEventRoleStr)      
+        BIND(IRI(?paintingProductionEventRoleStr) as ?paintingProductionEventRole)
+        BIND(REPLACE(STR(?artistUri), "http://www.wikidata.org/entity/", "https://www.intavia.org/role/responsibleArtist/") as ?artistProductionEventRoleStr)      
+        BIND(IRI(?artistProductionEventRoleStr) as ?artistProductionEventRole)
+        BIND(REPLACE(STR(?painting), "http://www.wikidata.org/entity/", "https://www.intavia.org/production_event/") as ?paintingProductionEventStr)      
+        BIND(IRI(?paintingProductionEventStr) as ?paintingProductionEvent)
+            OPTIONAL{?painting wdt:P571 ?pInception .
+        BIND(REPLACE(STR(?painting), "http://www.wikidata.org/entity/", "https://www.intavia.org/timespan_production/") as ?paintingProductionTimespanStr)      
+        BIND(IRI(?paintingProductionTimespanStr) as ?paintingProductionTimespan)
+        }
+                OPTIONAL{?painting rdfs:label ?paintingLabel
+                    BIND(CONCAT(REPLACE(STR(?painting), "http://www.wikidata.org/entity/", "https://www.intavia.org/cho/"), "title") as ?paintingAppelationStr)      
+                    BIND(IRI(?paintingAppelationStr) as ?paintingAppelation)
+      FILTER(lang(?paintingLabel) = "en")
+    }
+          }
+          
+      
+      }
+    }
+}
