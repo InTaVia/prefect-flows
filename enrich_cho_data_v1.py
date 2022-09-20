@@ -48,7 +48,7 @@ def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities)
         max_entities = retrieve_counts(sparql)
     offset = 0
     while offset < max_entities:
-        results = retrieve_cho_data(sparql, offset, limit, template, named_graph)
+        results = retrieve_cho_data.run(sparql, offset, limit, template, named_graph)
         offset += limit
     return results
 
