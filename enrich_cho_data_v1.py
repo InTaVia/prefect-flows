@@ -1,4 +1,5 @@
 
+from datetime import timedelta
 from string import Template
 from prefect import task, Flow, Parameter
 from prefect.storage import GitHub
@@ -14,20 +15,17 @@ TEMP_FOLDER = '/tmp/'
 def download_source_data(sources):
     local_files = {}
     for source in sources:
-        print(source)
         local_filename = source.split('/')[-1]
         target_file = TEMP_FOLDER + local_filename
         r = requests.get(source, allow_redirects=True)
         with open(target_file, 'w') as f:
             f.write(r.text)
-        print(target_file)
         local_files[local_filename] = target_file
     return local_files
 
 
 @task(log_stdout=True)
 def setup_sparql_connection(endpoint):
-    print(endpoint, os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(JSON)
     sparql.setHTTPAuth("BASIC")
@@ -53,11 +51,10 @@ def retrieve_counts(sparql):
     results = sparql.query().convert()
     return int(results["results"]["bindings"][0]["count"]["value"])
 
-@task(log_stdout=True)
+@task(log_stdout=True, max_retries=3, retry_delay=timedelta(seconds=360))
 def retrieve_cho_data(sparql, offset, limit, template, named_graph):
     with open(template, "r+") as query:
         st1 = Template(query.read()).substitute(namedGraph=named_graph, offset=offset, limit=limit)
-        print("printing st1", st1)
     sparql.setQuery(st1)
     results = sparql.queryAndConvert()
     return results
@@ -81,7 +78,6 @@ with Flow("InTaVia CHO Wikidata") as flow:
     named_graph = Parameter("Named Graph", default="http://data.acdh.oeaw.ac.at/intavia/cho")
     sparql = setup_sparql_connection(endpoint)
     temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v1.sparql"])
-    print(temp_files)
     res = retrieve_cho_data_master(sparql, limit, temp_files, named_graph, max_entities)
 
 
