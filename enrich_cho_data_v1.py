@@ -5,6 +5,7 @@ from prefect.storage import GitHub
 from prefect.run_configs import KubernetesRun
 from SPARQLWrapper import SPARQLWrapper, JSON
 import os
+import requests
 
 
 TEMP_FOLDER = '/tmp/'
@@ -13,11 +14,13 @@ TEMP_FOLDER = '/tmp/'
 def download_source_data(sources):
     local_files = {}
     for source in sources:
+        print(source)
         local_filename = source.split('/')[-1]
         target_file = TEMP_FOLDER + local_filename
         r = requests.get(source, allow_redirects=True)
         with open(target_file, 'w') as f:
             f.write(r.text)
+        print(target_file)
         local_files[local_filename] = target_file
     return local_files
 
@@ -78,5 +81,5 @@ with Flow("InTaVia CHO Wikidata") as flow:
     res = retrieve_cho_data_master(sparql, limit, temp_files[0], named_graph, max_entities)
 
 
-flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows", path="enrich_cho_data_v1.py")
