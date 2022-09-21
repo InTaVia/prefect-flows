@@ -27,11 +27,13 @@ def download_source_data(sources):
 
 @task(log_stdout=True)
 def setup_sparql_connection(endpoint):
+    print(endpoint, os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(JSON)
     sparql.setHTTPAuth("BASIC")
     sparql.setCredentials(user=os.environ.get(
         "RDFDB_USER"), passwd=os.environ.get("RDFDB_PASSWORD"))
+    return sparql
 
 @task(log_stdout=True)
 def retrieve_counts(sparql):
