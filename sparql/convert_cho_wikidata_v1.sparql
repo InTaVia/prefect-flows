@@ -6,6 +6,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX wikibase: <http://wikiba.se/ontology#>
 PREFIX bd: <http://www.bigdata.com/rdf#>
 PREFIX idm: <https://www.intavia.org/idm/>
+PREFIX idmrole: <https://www.intavia.org/idm/role/>
 PREFIX bioc: <http://www.ldf.fi/schema/bioc/>
  
 INSERT {
@@ -17,7 +18,9 @@ INSERT {
     ?paintingProductionEvent bioc:occured_in_the_presence_of_in_role ?paintingProductionEventRole;
         bioc:had_participant_in_role ?artistProductionEventRole .
     ?artist bioc:bearer_of ?artistProductionEventRole .
-    ?artistProductionEventRole a bioc:Event_Role .
+    ?artistProductionEventRole a idmrole:producing_artist ,
+            bioc:Event_Role .
+    ?artistProductionEventRole rdfs:label "producing artist"@en .
     ?paintingProductionEvent crm:P4_has_time-span ?paintingProductionTimespan .
     ?paintingProductionEvent a crm:E12_Production .
     ?paintingProductionTimespan crm:P82a_begin_of_the_begin ?pInception .
