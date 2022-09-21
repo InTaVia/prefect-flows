@@ -27,8 +27,7 @@ def download_source_data(sources):
 
 @task(log_stdout=True)
 def setup_sparql_connection(endpoint):
-    sparql_endpoint = os.environ.get("SPARQL_ENDPOINT")
-    sparql = SPARQLWrapper(sparql_endpoint)
+    sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(JSON)
     sparql.setHTTPAuth("BASIC")
     sparql.setCredentials(user=os.environ.get(
