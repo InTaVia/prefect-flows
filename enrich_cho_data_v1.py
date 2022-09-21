@@ -7,6 +7,21 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import os
 
 
+TEMP_FOLDER = '/tmp/'
+
+@task
+def download_source_data(sources):
+    local_files = {}
+    for source in sources:
+        local_filename = source.split('/')[-1]
+        target_file = TEMP_FOLDER + local_filename
+        r = requests.get(source, allow_redirects=True)
+        with open(target_file, 'w') as f:
+            f.write(r.text)
+        local_files[local_filename] = target_file
+    return local_files
+
+
 @task
 def setup_sparql_connection(endpoint):
     sparql_endpoint = os.environ.get("SPARQL_ENDPOINT")
@@ -59,7 +74,8 @@ with Flow("InTaVia CHO Wikidata") as flow:
     max_entities = Parameter("Max Entities", default=None)
     named_graph = Parameter("Named Graph", default="http://data.acdh.oeaw.ac.at/intavia/cho")
     sparql = setup_sparql_connection(endpoint)
-    res = retrieve_cho_data_master(sparql, limit, "sparql/convert_cho_wikidata_v1.sparql", named_graph, max_entities)
+    temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v1.sparql"])
+    res = retrieve_cho_data_master(sparql, limit, temp_files[0], named_graph, max_entities)
 
 
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
