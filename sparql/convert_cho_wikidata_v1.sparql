@@ -44,7 +44,8 @@ INSERT {
           
           }
           SERVICE <https://query.wikidata.org/sparql> {
-            ?artistUri wdt:P800 ?painting .
+            #?artistUri wdt:P800 ?painting .
+            ?painting wdt:P170 ?artistUri .
             ?painting wdt:P31 wd:Q3305213
         BIND(REPLACE(STR(?painting), "http://www.wikidata.org/entity/", "https://www.intavia.org/productionthingrole/") as ?paintingProductionEventRoleStr)      
         BIND(IRI(?paintingProductionEventRoleStr) as ?paintingProductionEventRole)
