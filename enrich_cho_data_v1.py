@@ -65,8 +65,9 @@ def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities)
     if max_entities is None:
         max_entities = retrieve_counts(sparql)
     offset = 0
+    print(template)
     while offset < max_entities:
-        results = retrieve_cho_data.run(sparql, offset, limit, template, named_graph)
+        results = retrieve_cho_data.run(sparql, offset, limit, template[0], named_graph)
         offset += limit
     return results
 
@@ -79,7 +80,7 @@ with Flow("InTaVia CHO Wikidata") as flow:
     sparql = setup_sparql_connection(endpoint)
     temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v1.sparql"])
     print(temp_files)
-    res = retrieve_cho_data_master(sparql, limit, temp_files[0], named_graph, max_entities)
+    res = retrieve_cho_data_master(sparql, limit, temp_files, named_graph, max_entities)
 
 
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
