@@ -1,7 +1,7 @@
 
 from datetime import timedelta
 from string import Template
-from prefect import task, Flow, Parameter
+from prefect import task, Flow, Parameter, context
 from prefect.storage import GitHub
 from prefect.run_configs import KubernetesRun
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -46,17 +46,29 @@ def retrieve_counts(sparql):
         ?person owl:sameAs ?personUri .
   FILTER(contains(str(?personUri), "wikidata.org"))
     }       
-        """
+        """ 
+    logger = context.get("logger")
+    logger.info(f"Getting absolut counts of person entities with wiki data links")
     sparql.setQuery(query)
-    results = sparql.query().convert()
+    try:
+        results = sparql.query().convert()
+    except Exception as e:
+        logger.error(f"Error while retrieving counts: {e}")
+        raise e
     return int(results["results"]["bindings"][0]["count"]["value"])
 
 @task(log_stdout=True, max_retries=3, retry_delay=timedelta(seconds=360))
 def retrieve_cho_data(sparql, offset, limit, template, named_graph):
+    logger = context.get("logger")
+    logger.info(f"Retrieving data from {offset} to {offset + limit}")
     with open(template, "r+") as query:
         st1 = Template(query.read()).substitute(namedGraph=named_graph, offset=offset, limit=limit)
     sparql.setQuery(st1)
-    results = sparql.queryAndConvert()
+    try:
+        results = sparql.queryAndConvert()
+    except Exception as e:
+        logger.error(f"Error while retrieving counts: {e}")
+        raise e
     return results
 
 @task(log_stdout=True)
