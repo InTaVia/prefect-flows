@@ -74,9 +74,8 @@ def retrieve_cho_data(sparql, offset, limit, template, named_graph):
 @task(log_stdout=True)
 def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities):
     if max_entities is None:
-        max_entities = retrieve_counts(sparql)
+        max_entities = retrieve_counts.run(sparql)
     offset = 0
-    print(template)
     while offset < max_entities:
         results = retrieve_cho_data.run(sparql, offset, limit, template["convert_cho_wikidata_v1.sparql"], named_graph)
         offset += limit
