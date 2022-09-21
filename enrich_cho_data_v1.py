@@ -56,6 +56,7 @@ def retrieve_counts(sparql):
 def retrieve_cho_data(sparql, offset, limit, template, named_graph):
     with open(template, "r+") as query:
         st1 = Template(query.read()).substitute(namedGraph=named_graph, offset=offset, limit=limit)
+        print("printing st1", st1)
     sparql.setQuery(st1)
     results = sparql.queryAndConvert()
     return results
