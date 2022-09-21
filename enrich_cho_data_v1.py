@@ -10,7 +10,7 @@ import requests
 
 TEMP_FOLDER = '/tmp/'
 
-@task
+@task(log_stdout=True)
 def download_source_data(sources):
     local_files = {}
     for source in sources:
@@ -25,7 +25,7 @@ def download_source_data(sources):
     return local_files
 
 
-@task
+@task(log_stdout=True)
 def setup_sparql_connection(endpoint):
     sparql_endpoint = os.environ.get("SPARQL_ENDPOINT")
     sparql = SPARQLWrapper(sparql_endpoint)
@@ -34,7 +34,7 @@ def setup_sparql_connection(endpoint):
     sparql.setCredentials(user=os.environ.get(
         "RDFDB_USER"), passwd=os.environ.get("RDFDB_PASSWORD"))
 
-@task
+@task(log_stdout=True)
 def retrieve_counts(sparql):
     query = """
     PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
@@ -52,7 +52,7 @@ def retrieve_counts(sparql):
     results = sparql.query().convert()
     return int(results["results"]["bindings"][0]["count"]["value"])
 
-@task
+@task(log_stdout=True)
 def retrieve_cho_data(sparql, offset, limit, template, named_graph):
     with open(template, "r+") as query:
         st1 = Template(query.read()).substitute(namedGraph=named_graph, offset=offset, limit=limit)
@@ -60,7 +60,7 @@ def retrieve_cho_data(sparql, offset, limit, template, named_graph):
     results = sparql.queryAndConvert()
     return results
 
-@task
+@task(log_stdout=True)
 def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities):
     if max_entities is None:
         max_entities = retrieve_counts(sparql)
