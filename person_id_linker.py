@@ -274,7 +274,7 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
         res_gnd_to_viaf,
         res_sbi_to_wikidata,
         res_sbi_to_gnd,
-        res_sbi_to_viaf
+        res_sbi_to_viaf,
         wikidata_ids,
         gnd_ids,
         sbi_ids
