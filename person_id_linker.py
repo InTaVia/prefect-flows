@@ -4,8 +4,8 @@ from rdflib import URIRef, Namespace
 from rdflib.namespace import OWL, RDF
 import prefect
 from prefect import Flow, task, Parameter
-#from prefect.storage import GitHub
-#from prefect.run_configs import KubernetesRun
+from prefect.storage import GitHub
+from prefect.run_configs import KubernetesRun
 import requests
 import os
 import itertools
@@ -297,6 +297,5 @@ with Flow("Generate provided person graph") as flow:
     update_target_graph(endpoint, target_graph, sameas_graph)
 
 
-flow.run(
-    endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql'
-)
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+flow.storage = GitHub(repo="InTaVia/prefect-flows", path="person_id_linker.py")

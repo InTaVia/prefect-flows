@@ -120,8 +120,5 @@ with Flow("Generate provided person graph") as flow:
   update_target_graph(endpoint, target_graph, provided_persons_graph)
 
 
-flow.run(
-  endpoint="http://localhost:9999/blazegraph/namespace/intavia/sparql"
-)
-#flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
-#flow.storage = GitHub(repo="InTaVia/prefect-flows", path="update_provided_person.py")
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+flow.storage = GitHub(repo="InTaVia/prefect-flows", path="update_provided_persons.py")
