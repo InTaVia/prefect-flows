@@ -135,7 +135,10 @@ def get_sameas_graph(
         res_gnd_to_viaf,
         res_sbi_to_wikidata,
         res_sbi_to_gnd,
-        res_sbi_to_viaf):
+        res_sbi_to_viaf,
+        wikidata_ids,
+        gnd_ids,
+        sbi_ids):
     g = rdflib.Graph()
 
     for ob in res_wikidata_to_gnd:
@@ -272,6 +275,9 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
         res_sbi_to_wikidata,
         res_sbi_to_gnd,
         res_sbi_to_viaf
+        wikidata_ids,
+        gnd_ids,
+        sbi_ids
         )
     logger.info(len(g))
     return g
