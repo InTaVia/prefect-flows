@@ -1,4 +1,4 @@
-from requests import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth
 import rdflib 
 from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import URIRef, Namespace
