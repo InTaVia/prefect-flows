@@ -1,3 +1,4 @@
+from requests import HTTPBasicAuth
 import rdflib 
 from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import URIRef, Namespace
@@ -286,6 +287,7 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
 def update_target_graph(endpoint, target_uri, data):
   logger = prefect.context.get('logger')
   delete_url =  endpoint + '?c=<' + target_uri + '>'
+  auth = HTTPBasicAuth(os.environ.get("RDFSTORE_USER"), os.environ.get("RDFSTORE_PASSWORD"))
   post_url =  endpoint + '?context-uri=' + target_uri + ''
   requests.delete(delete_url)
   requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=data.serialize())
@@ -295,7 +297,6 @@ with Flow("Person ID Linker") as flow:
     endpoint = Parameter("endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql")
     wd_endpoint = Parameter("wd_endpoint", default="https://query.wikidata.org/sparql") 
     target_graph = Parameter("target_graph", default="http://www.intavia.org/graphs/person-id-enrichment") # string
-
     intavia_sparql = setup_sparql_connection(endpoint)
     wd_sparql = setup_wd_sparql_connection(wd_endpoint)
     print(intavia_sparql)
