@@ -287,7 +287,7 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
 def update_target_graph(endpoint, target_uri, data):
     logger = prefect.context.get('logger')
     delete_url =  endpoint + '?c=<' + target_uri + '>'
-    auth = HTTPBasicAuth(os.environ.get("RDFSTORE_USER"), os.environ.get("RDFSTORE_PASSWORD"))
+    auth = HTTPBasicAuth(os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     post_url =  endpoint + '?context-uri=' + target_uri + ''
     res = requests.delete(delete_url, auth=auth)
     res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=data.serialize(), auth=auth)
