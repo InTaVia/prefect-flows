@@ -285,7 +285,7 @@ def update_target_graph(endpoint, target_uri, data):
   requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=data.serialize())
 
 
-with Flow("Generate provided person graph") as flow:
+with Flow("Person ID Linker") as flow:
     endpoint = Parameter("endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql")
     wd_endpoint = Parameter("wd_endpoint", default="https://query.wikidata.org/sparql") 
     target_graph = Parameter("target_graph", default="http://www.intavia.org/graphs/person-id-enrichment") # string
