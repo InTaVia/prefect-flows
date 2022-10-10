@@ -70,8 +70,6 @@ def create_provided_persons_graph(sparql, id_graph, person_source_uris):
   } 
   """
 
-    logger.info(personQuery)
-
     g = Graph()
 
     providedPersonType = IDMCORE.Provided_Person
@@ -170,7 +168,7 @@ def create_target_entities():
     return entities, g   
 
 @task()
-def add_provenance(_, start_time, create_source_entities, create_target_entities, endpoint,t2,t3,t4):
+def add_provenance(_, start_time, create_source_entities, create_target_entities, endpoint):
     logger = prefect.context.get('logger')
     
     flow_name = prefect.context.flow_name
@@ -203,17 +201,11 @@ def add_provenance(_, start_time, create_source_entities, create_target_entities
     for target_entity in target_entities:
         g.add( (activityURI, PROV.generated, target_entity))
 
-    print(g.serialize())
-
     
     auth = HTTPBasicAuth(os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     post_url =  endpoint + '?context-uri=' + PROV_TARGET_GRAPH + ''
     res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=g.serialize(), auth=auth)
-    logger.info(res2)
-  #with open('sparql/insert_flow_run_provenance.sparql', "r+") as template_file:
-  #  insert = Template(template_file.read()).substitute(
-  #      named_graph = TARGET_GRAPH,
-#      )
+
 
  
 with Flow("Generate provided person graph") as flow:
@@ -232,7 +224,7 @@ with Flow("Generate provided person graph") as flow:
     provided_persons_graph = create_provided_persons_graph(
         sparql, id_graph, person_source_uris)
     res = update_target_graph(endpoint, target_graph, provided_persons_graph)
-    add_provenance(res, start_time, create_source_entities, create_target_entities, endpoint, person_source_uris,target_graph,id_source_uri)
+    add_provenance(res, start_time, create_source_entities, create_target_entities, endpoint)
 
 
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib requests"},
