@@ -15,6 +15,7 @@ requests = "^2.27.1"
 pprint36 = "^3.9.0"
 urllib3 = "^1.26.8"
 prefect = {extras = ["kubernetes"], version = "^1.2.1"}
+owlrl = "^6.0.2"
 
 [tool.poetry.dev-dependencies]
 
