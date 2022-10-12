@@ -23,20 +23,22 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 """
 
-
 def wikidata_to_gnd(sparql, wikidata_ids):
     # Wikidata endpoint doesn't handle ~30 000 inline URIs in the query, so split the query:
     res = []
     BATCH_SIZE = 15000
+
     for start_index in range(0, len(wikidata_ids), BATCH_SIZE):
-                
+        end_index = start_index+BATCH_SIZE-1
+        if end_index > len(wikidata_ids):
+            end_index = len(wikidata_ids)
+
         sparql.setQuery(PREFIXES + """
         SELECT * {
-        VALUES ?wikidata_uri {<""" + '> <'.join(dict(itertools.islice(wikidata_ids.items(), start_index)).keys()) + """>}
+        VALUES ?wikidata_uri {<""" + '> <'.join(dict(itertools.islice(wikidata_ids.items(), start_index, end_index)).keys()) + """>}
         ?wikidata_uri wdt:P227 ?gnd_id .
         BIND (URI(CONCAT("https://d-nb.info/gnd/", ?gnd_id)) AS ?gnd_uri)   
         }
-        #LIMIT 1
         """)
 
         sparql.setReturnFormat(JSON)
@@ -50,14 +52,16 @@ def wikidata_to_viaf(sparql, wikidata_ids):
     res = []
     BATCH_SIZE = 15000
     for start_index in range(0, len(wikidata_ids), BATCH_SIZE):
-                
+        end_index = start_index+BATCH_SIZE-1
+        if end_index > len(wikidata_ids):
+            end_index = len(wikidata_ids)
+
         sparql.setQuery(PREFIXES + """
         SELECT * {
-        VALUES ?wikidata_uri {<""" + '> <'.join(dict(itertools.islice(wikidata_ids.items(), start_index)).keys()) + """>}
+        VALUES ?wikidata_uri {<""" + '> <'.join(dict(itertools.islice(wikidata_ids.items(), start_index, end_index)).keys()) + """>}
         ?wikidata_uri wdt:P214 ?viaf_id . 
         BIND (URI(CONCAT("https://viaf.org/viaf/", ?viaf_id)) AS ?viaf_uri)
         }
-        #LIMIT 1
         """)
         results = sparql.query().convert()
         res += results["results"]["bindings"]
@@ -69,8 +73,8 @@ def gnd_to_wikidata(sparql, gnd_ids):
     SELECT * {
     VALUES ?gnd_id {'""" + "' '".join(gnd_ids.keys()) + """'}
     ?wikidata_uri wdt:P227 ?gnd_id .
+    BIND (URI(CONCAT("https://d-nb.info/gnd/", ?gnd_id)) AS ?gnd_uri)
     }
-    #LIMIT 1
     """)
 
     results = sparql.query().convert()
@@ -81,10 +85,10 @@ def gnd_to_viaf(sparql, gnd_ids):
     SELECT * {
     VALUES ?gnd_id {'""" + "' '".join(gnd_ids.keys()) + """'}
     ?wikidata_uri wdt:P227 ?gnd_id ;
-                    wdt:P214 ?viaf_id . 
+                  wdt:P214 ?viaf_id .
     BIND (URI(CONCAT("https://viaf.org/viaf/", ?viaf_id)) AS ?viaf_uri)
+    BIND (URI(CONCAT("https://d-nb.info/gnd/", ?gnd_id)) AS ?gnd_uri)
     }
-    #LIMIT 1
     """)
     results = sparql.query().convert()
     return results["results"]["bindings"]
@@ -94,8 +98,8 @@ def sbi_to_wikidata(sparql, sbi_ids):
     SELECT * {
     VALUES ?sbi_id {'""" + "' '".join(sbi_ids.keys()) + """'}
     ?wikidata_uri wdt:P1254 ?sbi_id .
+    BIND (URI(CONCAT("https://www.slovenska-biografija.si/oseba/sbi", ?sbi_id, "/")) AS ?sbi_uri)
     }
-    #LIMIT 1
     """)
 
     results = sparql.query().convert()
@@ -106,10 +110,10 @@ def sbi_to_gnd(sparql, sbi_ids):
     SELECT * {
     VALUES ?sbi_id {'""" + "' '".join(sbi_ids.keys()) + """'}
     ?wikidata_uri wdt:P1254 ?sbi_id ;
-                    wdt:P227 ?gnd_id . 
+                  wdt:P227 ?gnd_id .
     BIND (URI(CONCAT("https://d-nb.info/gnd/", ?gnd_id)) AS ?gnd_uri)
+    BIND (URI(CONCAT("https://www.slovenska-biografija.si/oseba/sbi", ?sbi_id, "/")) AS ?sbi_uri)
     }
-    #LIMIT 1
     """)
 
     results = sparql.query().convert()
@@ -120,14 +124,41 @@ def sbi_to_viaf(sparql, sbi_ids):
     SELECT * {
     VALUES ?sbi_id {'""" + "' '".join(sbi_ids.keys()) + """'}
     ?wikidata_uri wdt:P1254 ?sbi_id ;
-                    wdt:P214 ?viaf_id . 
+                  wdt:P214 ?viaf_id .
     BIND (URI(CONCAT("https://viaf.org/viaf/", ?viaf_id)) AS ?viaf_uri)
+    BIND (URI(CONCAT("https://www.slovenska-biografija.si/oseba/sbi", ?sbi_id, "/")) AS ?sbi_uri)
     }
-    #LIMIT 1
     """)
 
     results = sparql.query().convert()
     return results["results"]["bindings"]
+
+def bp_to_wikidata(sparql, bp_ids):
+    res = []
+    BATCH_SIZE = 15000
+    for start_index in range(0, len(bp_ids), BATCH_SIZE):
+        end_index = start_index+BATCH_SIZE-1
+        if end_index > len(bp_ids):
+            end_index = len(bp_ids)
+
+        sparql.setQuery(PREFIXES + """
+        SELECT * {
+        VALUES ?bp_id {'""" + "' '".join(dict(itertools.islice(bp_ids.items(), start_index, end_index)).keys()) + """'}
+        ?wikidata_uri wdt:P651 ?bp_id .
+        }
+        """)
+
+        results = sparql.query().convert()
+        res += results["results"]["bindings"]
+
+    return res
+
+def get_ext_uris_for_wikidata(res, wikidata_uri_fieldname, other_uri_fieldname, wikidata_to_others):
+    for ob in res:
+        if ob[wikidata_uri_fieldname]['value'] not in wikidata_to_others:
+           wikidata_to_others[ob[wikidata_uri_fieldname]['value']] = list()
+        wikidata_to_others[ob[wikidata_uri_fieldname]['value']].append(ob[other_uri_fieldname]['value'])
+    #return wikidata_to_others
 
 def get_sameas_graph(
         res_wikidata_to_gnd, 
@@ -139,42 +170,38 @@ def get_sameas_graph(
         res_sbi_to_viaf,
         wikidata_ids,
         gnd_ids,
-        sbi_ids):
+        sbi_ids,
+        person_proxy_uri_prefix,
+        person_proxy_class):
     g = rdflib.Graph()
 
-    for ob in res_wikidata_to_gnd:
-        for intavia_uri in wikidata_ids[ob['wikidata_uri']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['gnd_uri']['value'])))
+    wikidata_to_others = dict()
+    get_ext_uris_for_wikidata(res_wikidata_to_gnd, "wikidata_uri", "gnd_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_wikidata_to_viaf, "wikidata_uri", "viaf_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_gnd_to_wikidata, "wikidata_uri", "gnd_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_gnd_to_viaf, "wikidata_uri", "gnd_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_gnd_to_viaf, "wikidata_uri", "viaf_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_sbi_to_wikidata, "wikidata_uri", "sbi_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_sbi_to_gnd, "wikidata_uri", "sbi_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_sbi_to_gnd, "wikidata_uri", "gnd_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_sbi_to_viaf, "wikidata_uri", "sbi_uri", wikidata_to_others)
+    get_ext_uris_for_wikidata(res_sbi_to_viaf, "wikidata_uri", "viaf_uri", wikidata_to_others)
 
-    for ob in res_wikidata_to_viaf:
-        for intavia_uri in wikidata_ids[ob['wikidata_uri']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['viaf_uri']['value'])))
+    person_proxy_local_id_counter = 1
+    for wikidata_uri, other_uris in wikidata_to_others.items():
+        g.add((URIRef(person_proxy_uri_prefix+str(person_proxy_local_id_counter)), RDF.type, URIRef(person_proxy_class)))
+        g.add((URIRef(person_proxy_uri_prefix+str(person_proxy_local_id_counter)), OWL.sameAs, URIRef(wikidata_uri)))
+        for other_uri in other_uris:
+            g.add((URIRef(person_proxy_uri_prefix+str(person_proxy_local_id_counter)), OWL.sameAs, URIRef(other_uri)))
+        person_proxy_local_id_counter += 1
 
-    for ob in res_gnd_to_wikidata:
-        for intavia_uri in gnd_ids[ob['gnd_id']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['wikidata_uri']['value'])))
+    # add Bionet -> Wikidata mappings to Bionet person proxies as they are not included in the source data
+    for wikidata_id, intavia_uris in wikidata_ids.items():
+        for intavia_uri in intavia_uris:
+            if intavia_uri.startswith("http://data.biographynet.nl/rdf/"):
+                g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(wikidata_id)))
 
-    for ob in res_gnd_to_viaf:
-        for intavia_uri in gnd_ids[ob['gnd_id']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['viaf_uri']['value'])))
-
-    for ob in res_sbi_to_wikidata:
-        for intavia_uri in sbi_ids[ob['sbi_id']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['wikidata_uri']['value'])))
-
-    for ob in res_sbi_to_gnd:
-        for intavia_uri in sbi_ids[ob['sbi_id']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['gnd_uri']['value'])))
-
-    for ob in res_sbi_to_viaf:
-        for intavia_uri in sbi_ids[ob['sbi_id']['value']]:
-            g.add((URIRef(intavia_uri), OWL.sameAs, URIRef(ob['viaf_uri']['value'])))
-
-    print(len(g))
-
-    #g.serialize("intavia-person-id-enrichment.ttl")
     return g
-
 
 @task
 def setup_sparql_connection(endpoint):
@@ -194,37 +221,34 @@ def setup_wd_sparql_connection(endpoint):
     return sparql
 
 @task
-def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
+def create_sameas_graph(intavia_sparql, wd_sparql, target_graph, person_proxy_uri_prefix, person_proxy_class):
     logger = prefect.context.get('logger')
     intavia_sparql.setQuery(PREFIXES + """
     SELECT * {
-    # Existing sameAs links in Intavia data:
+    # Existing person sameAs links in Intavia data:
     #  APIS (graph: http://apis.acdh.oeaw.ac.at/data -> GND (URI ns: https://d-nb.info/gnd/)
     #  BS (graph: http://ldf.fi/nbf/data) -> Wikidata (URI ns: http://www.wikidata.org/entity/)
     #  SBI (graph: http://www.intavia.eu/sbi) -> Slovenska biografija (URI ns: https://www.slovenska-biografija.si/oseba/) 
-    #  BiographyNet (graph: http://data.biographynet.nl/rdf/data) -> Wikidata (URI ns: http://www.wikidata.org/entity/)
-
-    { GRAPH ?graph {
+    # Wikidata -> Dutch Biography Portal
+    {
+      GRAPH ?graph {
         # Don't include the previous result of the person id enrichment (this script)
         FILTER (STR(?graph) != \"""" + target_graph + """\")
 
-        VALUES ?class { crm:E21_Person idmcore:Person_Proxy }
-        ?s a ?class ;
-            owl:sameAs ?ext_uri .
-        }
+        ?person_proxy a idmcore:Person_Proxy ;
+                      owl:sameAs ?ext_uri .
+      }
     }
     UNION
     # Bionet
-    { ?ext_uri <http://www.wikidata.org/prop/direct/651>/^<http://www.intavia.eu/idm-core/person_proxy_for> ?s . }
-    
-    # Filter out sameAs links to redundant national data sources
-    FILTER (!STRSTARTS(STR(?ext_uri), "http://ldf.fi/nbf/"))
-    FILTER (!STRSTARTS(STR(?ext_uri), "https://apis.acdh.oeaw.ac.at/"))
+    { ?provided_person <http://data.biographynet.nl/rdf/personID> ?ext_id . 
+      BIND ("http://www.biografischportaal.nl/" AS ?ext_ns)
+      ?person_proxy idmcore:person_proxy_for ?provided_person .
+    }
 
     BIND (IF (STRSTARTS(STR(?ext_uri), "https://www.slovenska-biografija.si/oseba/"), "https://www.slovenska-biografija.si/oseba/", REPLACE(STR(?ext_uri), "[^/]+$", "")) as ?ext_ns)
     BIND (IF (STRSTARTS(STR(?ext_uri), "https://www.slovenska-biografija.si/oseba/"), REPLACE(REPLACE(STR(?ext_uri), "^https://www.slovenska-biografija.si/oseba/sbi", ""), "/", ""), REPLACE(STR(?ext_uri), "^.+/", "")) AS ?ext_id)
     }
-    #LIMIT 1
     """)
 
     results = intavia_sparql.query().convert()
@@ -233,24 +257,36 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
     wikidata_ids = dict()
     gnd_ids = dict()
     sbi_ids = dict()
+    bp_ids = dict() # Dutch Biography Portal
 
     for ob in res:
         if (ob['ext_ns']['value'] == "http://www.wikidata.org/entity/"):
             if ob['ext_uri']['value'] not in wikidata_ids:
                 wikidata_ids[ob['ext_uri']['value']] = list()
-            wikidata_ids[ob['ext_uri']['value']].append(ob['s']['value'])
+            wikidata_ids[ob['ext_uri']['value']].append(ob['person_proxy']['value'])
         elif (ob['ext_ns']['value'] == "https://d-nb.info/gnd/"):
             if ob['ext_id']['value'] not in gnd_ids:
                 gnd_ids[ob['ext_id']['value']] = list()
-            gnd_ids[ob['ext_id']['value']].append(ob['s']['value'])
+            gnd_ids[ob['ext_id']['value']].append(ob['person_proxy']['value'])
         elif (ob['ext_ns']['value'] == "https://www.slovenska-biografija.si/oseba/"):
             if ob['ext_id']['value'] not in sbi_ids:
                 sbi_ids[ob['ext_id']['value']] = list()
-            sbi_ids[ob['ext_id']['value']].append(ob['s']['value'])
-
+            sbi_ids[ob['ext_id']['value']].append(ob['person_proxy']['value'])
+        elif (ob['ext_ns']['value'] == "http://www.biografischportaal.nl/"):
+            if ob['ext_id']['value'] not in bp_ids:
+                bp_ids[ob['ext_id']['value']] = list()
+            bp_ids[ob['ext_id']['value']].append(ob['person_proxy']['value'])
     logger.info('wikidata_ids:' + str(len(wikidata_ids)))
     logger.info('gnd_ids:' + str(len(gnd_ids)))
     logger.info('sbi_ids:' + str(len(sbi_ids)))
+    logger.info('bp_ids:' + str(len(bp_ids)))
+
+    res_bp_to_wikidata = bp_to_wikidata(wd_sparql, bp_ids)
+    for ob in res_bp_to_wikidata:
+        for intavia_uri in bp_ids[ob['bp_id']['value']]:
+            if ob['wikidata_uri']['value'] not in wikidata_ids:
+                wikidata_ids[ob['wikidata_uri']['value']] = list()
+            wikidata_ids[ob['wikidata_uri']['value']].extend(bp_ids[ob['bp_id']['value']])
 
     res_wikidata_to_gnd = wikidata_to_gnd(wd_sparql, wikidata_ids)
     res_wikidata_to_viaf = wikidata_to_viaf(wd_sparql, wikidata_ids)
@@ -278,8 +314,9 @@ def create_sameas_graph(intavia_sparql, wd_sparql, target_graph):
         res_sbi_to_viaf,
         wikidata_ids,
         gnd_ids,
-        sbi_ids
-        )
+        sbi_ids,
+        person_proxy_uri_prefix,
+        person_proxy_class)
     logger.info(len(g))
     return g
 
@@ -294,17 +331,23 @@ def update_target_graph(endpoint, target_uri, data):
     logger.info(res)
     logger.info(res2)
 
+@task()
+def serialize_graph(graph, file):
+    graph.serialize(file)
 
 with Flow("Person ID Linker") as flow:
     endpoint = Parameter("endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql")
     wd_endpoint = Parameter("wd_endpoint", default="https://query.wikidata.org/sparql") 
     target_graph = Parameter("target_graph", default="http://www.intavia.org/graphs/person-id-enrichment") # string
+    person_proxy_uri_prefix = Parameter("person_proxy_uri_prefix", default="http://www.intavia.eu/person-id-linker/person_proxy_")
+    person_proxy_class = Parameter("person_proxy_class", default="http://www.intavia.eu/idm-core/Person_Proxy")
+ 
     intavia_sparql = setup_sparql_connection(endpoint)
     wd_sparql = setup_wd_sparql_connection(wd_endpoint)
-    print(intavia_sparql)
-    sameas_graph = create_sameas_graph(intavia_sparql, wd_sparql, target_graph)
+    sameas_graph = create_sameas_graph(intavia_sparql, wd_sparql, target_graph, person_proxy_uri_prefix, person_proxy_class)
     update_target_graph(endpoint, target_graph, sameas_graph)
-
+    #serialize_graph(sameas_graph, "intavia-person-id-enrichment.ttl") # for local dev
 
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows", path="person_id_linker.py")
+#flow.run() # for local dev
