@@ -76,20 +76,6 @@ INSERT {
                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/timespan_production/") as ?choProductionTimespanStr)      
                 BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
                 }
-            OPTIONAL{?cho rdfs:label ?chordfslabel .
-            FILTER(lang(?choLabel) = "en")
-            }
-            OPTIONAL{?material rdfs:label ?materialLabel .
-            FILTER(lang(?materialLabel) = "en")
-                }
-            OPTIONAL {?class rdfs:label ?classLabel .
-            FILTER(lang(?classLabel) = "en")
-            }
-            OPTIONAL {
-                ?cho wdt:P195 ?collection .
-                ?collection rdfs:label ?collectionLabel .
-            FILTER(lang(?collectionLabel) = "en")
-            }
     }
           }
           
