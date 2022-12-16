@@ -11,14 +11,14 @@ PREFIX bioc: <http://www.ldf.fi/schema/bioc/>
  
 INSERT {
   GRAPH <$namedGraph> {
-     ?cho a crm:E24_Physical_Human_Made_Thing,
-               idm:CHO_Proxy;
-               bioc:bearer_of ?choProductionEventRole;
-               crm:P2_has_type ?class;
-               crm:P1_is_identified_by ?cho_1476Title;
-               rdfs:label ?choLabel.
-        ?class rdfs:label ?classLabel;
-               a crm:E55_Type.
+     ?cho a crm:E24_Physical_Human_Made_Thing ,
+               idm:CHO_Proxy ; 
+               bioc:bearer_of ?choProductionEventRole ;
+               crm:P2_has_type ?class ;
+               crm:P1_is_identified_by ?cho_1476Title ;
+               rdfs:label ?choLabel .
+        ?class rdfs:label ?classLabel ;
+               a crm:E55_Type .
         ?cho_1476Title rdfs:label ?choTitle .
         ?choProductionEventRole a bioc:Thing_Role .
         ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole;
@@ -35,7 +35,7 @@ INSERT {
         ?cho_material rdfs:label ?materialLabel .
         ?collection crm:P46_is_composed_of ?cho .
         ?collection a crm:E78_Curated_Holding .
-        ?collection rdfs:label ?collectionLabel.
+        ?collection rdfs:label ?collectionLabel .
   }
 } WHERE {    
     {
