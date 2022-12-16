@@ -88,7 +88,7 @@ with Flow("InTaVia CHO Wikidata") as flow:
     max_entities = Parameter("Max Entities", default=None)
     named_graph = Parameter("Named Graph", default="http://data.acdh.oeaw.ac.at/intavia/cho")
     sparql = setup_sparql_connection(endpoint)
-    temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v2.sparql"])
+    temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v3.1.sparql"])
     res = retrieve_cho_data_master(sparql, limit, temp_files, named_graph, max_entities)
 
 
