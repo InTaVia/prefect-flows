@@ -65,3 +65,88 @@ If you wish to serialize the data in file instead of storing the data in a named
 * Uncomment the line for serializing graph into file.
 
 `RDFDB_USER=... RDFDB_PASSWORD=... poetry run python person_id_linker.py`
+
+# Provenance 
+
+The basic idea behind InTaVia provenance tracking:
+* Named graphs are populated by workflows only
+* Workflow uses shared versioning related function (get_named_graphs_for_graph_ids) to query for mapping between the "canonical" URI of the dataset (e.g. <http://intavia.eu/graphs/test_dataset>) and the versioned URI (e.g. <http://intavia.eu/graphs/test_dataset/version/a9865c25-d543-47c9-907b-af5e4cd5b034>). 
+* Worfklow uses shared provenance task generate_versioned_named_graph) to generate URI for versioned dataset.
+* Workflow uses shared provenance task (add_provenance_data) to record provenance
+* Provenance tasks generates PROV-O based provenance record and  a new idm-core:GraphSetInTime, which can be used to access a set of named graphs for specific time period. 
+
+Example of the latest graph set without an end:
+```
+<http://www.intavia.eu/sets/99da24be-2a45-4cd6-a27a-c53fdbc959e4> a idm-prov:GraphSetInTime ;
+    idm-prov:namedGraphs <http://intavia.eu/graphs/test_dataset/version/21795d27-38d1-4e8e-935c-46ffdcb430c8> ;
+    idm-prov:start "2022-12-15T21:03:44.954656+00:00"^^xsd:dateTime .
+```
+
+Example of an historical state in with both start and end:
+```
+<http://www.intavia.eu/sets/99da24be-2a45-4cd6-a27a-c53fdbc959e4> a idm-prov:GraphSetInTime ;
+    idm-prov:namedGraphs <http://intavia.eu/graphs/test_dataset/version/21795d27-38d1-4e8e-935c-46ffdcb430c8> ;
+    idm-prov:start "2022-11-15T21:03:44.954656+00:00"^^xsd:dateTime .
+    idm-prov:end "2022-12-11T21:03:44.954656+00:00"^^xsd:dateTime .    
+```
+
+Example PROV-O activity:
+```
+<http://www.intavia.eu/idm-prov/activity/1d0f40a3-b090-4652-83e4-00ecad9401ed> a prov:Activity ;
+    idm-prefect:flow_id "Ingest workflow" ;
+    idm-prefect:flow_name "Ingest workflow" ;
+    idm-prefect:flow_run_version "not-available" ;
+    idm-prov:workflow <http://www.intavia.eu/idm-prov/workflow/Ingest%20workflow> ;
+    prov:endedAtTime "2022-12-15T21:04:18.717484+00:00"^^xsd:dateTime ;
+    prov:generated <http://www.intavia.eu/idm-prov/1d0f40a3-b090-4652-83e4-00ecad9401ed/target/0> ;
+    prov:startedAtTime "2022-12-15T21:04:17.899677+00:00"^^xsd:dateTime ;
+    prov:used <http://www.intavia.eu/idm-prov/1d0f40a3-b090-4652-83e4-00ecad9401ed/source/0> .
+
+```
+
+Example PROV-O entity description:
+```
+<http://www.intavia.eu/idm-prov/1d0f40a3-b090-4652-83e4-00ecad9401ed/target/0> a prov:Entity ;
+    rdfs:label "Test data" ;
+    idm-prov:graphID <http://intavia.eu/graphs/test_dataset> ;
+    idm-prov:source <http://intavia.eu/graphs/test_dataset/version/a9865c25-d543-47c9-907b-af5e4cd5b034> .
+```
+
+
+NOTE!
+Using versioned named graphs means that one cannot be queried anymore with the unversioned graph URI.
+
+## Guidelines for workflow implementators
+
+All necessary code is in the prov_common module. Which contains annotated prefect tasks and couple of helper functions. 
+
+Helper functions:
+
+`get_named_graphs_for_graph_ids(endpoint, timestamp, graph_ids)`
+
+Params:
+* endpoint - url of the sparql endpoint
+* timestamp - UTC datetime for the point in time from which to retrieve the versioned named graphs OR None for the latest versions. 
+*  graph_ids - List of canonical named graph URIs to retrieve versioned named graphs for. For example `['http://intavia.eu/graphs/mydataset']` could return something like `{'http://intavia.eu/graphs/mydataset': 'http://intavia.eu/graphs/mydataset/version/2' }`
+ 
+Function returns a dictionary with graph_id as the key and versioned graph URI as the value
+
+Tasks:
+
+`generate_versioned_named_graph(graph_id)`
+
+Returns unique versioned URI for the given graphID, which can then be used to store new dataset creted by the workflow. This function should be called for each new dataset in order to ensure consistent and unique naming of the versioned graphs. 
+
+`add_provenance_data(_, endpoint, source, targets)`
+
+Params:
+* _ - Can be anything and can be used to make the prefect's implicit task ordering work. 
+* endpoint - url of the sparql endpoint
+* sources & targets - List of entity description objects. See below. 
+```
+{
+    "label": "Label for the dataset which will be part of the provenance data."
+    "uri": "URI of the source/target"
+}
+```
+Value of the the uri property can be for example an URL where the data was downloaded. If uri refers to an internal named graph the value MUST be generated using the `generate_versioned_named_graph()`function. This is due to fact that the graphID or the canonical URI of the named graph is extracted from the versioned URI and must therefore contain a specific structure. 
