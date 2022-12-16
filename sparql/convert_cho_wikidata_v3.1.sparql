@@ -14,7 +14,7 @@ PREFIX schema: <http://schema.org/>
 PREFIX psn: <http://www.wikidata.org/prop/statement/value-normalized/>
 
 INSERT {
-  GRAPH <http://examplewikichotest7_morelanguagelabels.at/>
+  GRAPH <$namedGraph>
         {
           ?cho a crm:E24_Physical_Human_Made_Thing,
                  idm:CHO_Proxy;
@@ -80,8 +80,9 @@ WHERE
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
                                                    FILTER(contains(str(?artistUri), "wikidata.org"))}
-                                       ORDER BY ?artist
-                          			   LIMIT 200
+                                      ORDER BY ?artist
+                                      LIMIT $limit
+                                      OFFSET $offset
                        }
                        SERVICE <https://query.wikidata.org/sparql>
                                {
