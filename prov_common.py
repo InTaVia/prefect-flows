@@ -144,7 +144,12 @@ def get_named_graphs_for_graph_ids(endpoint, timestamp, graph_ids):
         Returns a dictionary with graph_id as the key and versioned graph URI as the value.
     """          
     logger = prefect.context.get('logger')
-    graphIDFilter = ','.join(list(map(lambda x: '<' + x + '>', graph_ids)))
+    graphIDFilter = ''
+    if graph_ids: 
+        graphIDList =  ','.join(list(map(lambda x: '<' + x + '>', graph_ids)))
+        graphIDFilter = 'FILTER(?graphID in (' + graphIDList + '))'
+
+
     if timestamp:
         timestamp_filter = 'FILTER(?period_start < "' + timestamp.isoformat() + '"^^xsd:dateTime )'
     else:
@@ -160,7 +165,7 @@ def get_named_graphs_for_graph_ids(endpoint, timestamp, graph_ids):
         ?set <http://www.intavia.eu/idm-core/namedGraphs> ?uri .
         ?entity <http://www.intavia.eu/idm-prov/graphID> ?graphID .
         ?entity <http://www.intavia.eu/idm-prov/source> ?uri
-        FILTER(?graphID in (""" + graphIDFilter + """))
+        """ + graphIDFilter + """
     }    
     """
 
@@ -173,8 +178,11 @@ def get_named_graphs_for_graph_ids(endpoint, timestamp, graph_ids):
         return None
 
     results = {}
-    for b in bindings:
-        results[b['graphID']['value']] = b['uri']['value']
+    for b in bindings:        
+        set_name = b['set']['value'] 
+        if set_name not in results:
+            results[set_name] = {}
+        results[set_name][b['graphID']['value']] = b['uri']['value']
         
     return results
 

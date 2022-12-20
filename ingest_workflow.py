@@ -54,13 +54,13 @@ with Flow("Ingest workflow") as flow:
 
 
 
-#flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests"})
-#flow.storage = GitHub(repo="InTaVia/prefect-flows", path="ingest_workflow.py")
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests"})
+flow.storage = GitHub(repo="InTaVia/prefect-flows", path="ingest_workflow.py")
 
-flow.run(
-    endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
-    source_url='https://raw.githubusercontent.com/InTaVia/idm-rdf/main/test_dataset_designsprint/exdataset.ttl',
-    source_label='Test dataset',
-    target_graph_id='http://intavia.eu/graphs/test_dataset',
-    target_label='Test data'
-)
+# flow.run(
+#     endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#     source_url='https://raw.githubusercontent.com/InTaVia/idm-rdf/main/test_dataset_designsprint/exdataset.ttl',
+#     source_label='Test dataset',
+#     target_graph_id='http://intavia.eu/graphs/test_dataset',
+#     target_label='Test data'
+# )

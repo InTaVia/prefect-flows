@@ -129,7 +129,13 @@ Params:
 * timestamp - UTC datetime for the point in time from which to retrieve the versioned named graphs OR None for the latest versions. 
 *  graph_ids - List of canonical named graph URIs to retrieve versioned named graphs for. For example `['http://intavia.eu/graphs/mydataset']` could return something like `{'http://intavia.eu/graphs/mydataset': 'http://intavia.eu/graphs/mydataset/version/2' }`
  
-Function returns a dictionary with graph_id as the key and versioned graph URI as the value
+Function returns a dictionary with graph_id as the key and versioned graph URI as the value grouped into sets. 
+
+```
+"set_uri": {
+    "named_graph_uri": "versined_named_graph_uri"
+}
+```
 
 Tasks:
 
