@@ -16,7 +16,7 @@ PREFIX wds: <http://www.wikidata.org/entity/statement/>
 PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
 
 INSERT {
-  GRAPH <http://wikichotest9.at/>
+  GRAPH <$namedGraph>
         {
           ?cho a crm:E24_Physical_Human_Made_Thing,
                  idm:CHO_Proxy;
