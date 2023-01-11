@@ -8,7 +8,7 @@ PREFIX wikibase: <http://wikiba.se/ontology#>
 PREFIX bd: <http://www.bigdata.com/rdf#>
 PREFIX idm: <https://www.intavia.org/idm/>
 PREFIX idmrole: <https://www.intavia.org/idm/role/>
-PREFIX bioc: <http://www.ldf.fi/schema/bioc/>
+PREFIX bioc: <http://ldf.fi/schema/bioc/>
 PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
 PREFIX schema: <http://schema.org/>
 PREFIX psn: <http://www.wikidata.org/prop/statement/value-normalized/>
