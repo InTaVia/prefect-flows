@@ -77,7 +77,7 @@ def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities)
         max_entities = retrieve_counts.run(sparql)
     offset = 0
     while offset < max_entities:
-        results = retrieve_cho_data.run(sparql, offset, limit, template["convert_cho_wikidata_v3.1.sparql"], named_graph)
+        results = retrieve_cho_data.run(sparql, offset, limit, template["convert_cho_wikidata_v3.2.sparql"], named_graph)
         offset += limit
     return results
 
@@ -88,7 +88,7 @@ with Flow("InTaVia CHO Wikidata") as flow:
     max_entities = Parameter("Max Entities", default=None)
     named_graph = Parameter("Named Graph", default="http://data.acdh.oeaw.ac.at/intavia/cho")
     sparql = setup_sparql_connection(endpoint)
-    temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v3.1.sparql"])
+    temp_files = download_source_data(["https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/convert_cho_wikidata_v3.2.sparql"])
     res = retrieve_cho_data_master(sparql, limit, temp_files, named_graph, max_entities)
 
 
