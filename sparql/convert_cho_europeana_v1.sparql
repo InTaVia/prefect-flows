@@ -93,7 +93,7 @@ INSERT {
             # According to Europeana, edm:Event has not implemented
             ?cho_measurement_event a crm:E16_Measurement.
             ?cho_measurement_event crm:P39_measured ?cho;
-                                crm:P40_observed_dimension ?dcterms_extent .
+                                crm:P40_observed_dimension ?dcterms_extent, ?cho_dimension_height, ?cho_dimension_width .
 
             # It would not be easy to map, as dimensions are often strings including unit
             ?cho_dimension_height a crm:E54_Dimension;
