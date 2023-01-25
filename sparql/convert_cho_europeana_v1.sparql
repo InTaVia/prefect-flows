@@ -44,20 +44,30 @@ INSERT {
             crm:P128_carries ?cho_inscription.
             #the following would be needed for mapping
             # how to map dc:coverage and ?dc_coverage_uri ? Is it different from crm:P62:depicts? (dc:subject is more towards classifications)
-            # how to map dc:format ?
+            # how to map dc:format ? (may include physical dimension, but also digital file format (jpg). see digital representation below)
             # how to map dc:source ?
+
+            # EDM has a distinction between pyhsical CHO and its digital representation (?item is EDM item node in this context)
             # how to map ?edm_webResource ?
             # how to map ?edm_object ?
             # how to map ?edm_isShownAt ?
             # how to map ?edm_isShownBy ?
+            # The above are similar but not exactly the same. All are URIs
+            # Check also modelling example here: https://docs.swissartresearch.net/et/do/ 
+            ?cho_do crm:P138_represents ?cho;
+                a ?edm_type.
+            ?cho_do crm:P1_is_identified_by ?cho_do_id.
+            ?cho_do_id rdfs:label ?item; rdfs:label ?edm_object; rdfs:label ?edm_isShownAt; rdfs:label ?edm_isShownBy; rdfs:label ?edm_webResource 
+                a crm:E42_Identifier.
+            
 
             # What kind of image is this? (?item ?WebResource ?)
             ?cho_image crm:P70_documents ?cho;
                     a crm:E31_Document.
-            #How to map dc:identifier? 
+            #How to map dc:identifier?  This item is difital representation
             ?item rdfs:label ?dc_title;
                         a crm:E35_Title .
-            ?item_id rdfs:label ?dc_identifier.
+            ?item_id rdfs:label ?dc_identifier;
                         a crm:E42_Identifier .
             # pasPart may not be URI
             ?dcterms_hasPart crm:P46_is_composed_of ?cho.
