@@ -14,6 +14,7 @@ TEMP_FOLDER = '/tmp/'
 @task(log_stdout=True)
 def download_source_data(sources):
     logger = context.get("logger")
+    sources = [f"https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/{sources}"]
     local_files = {}
     for source in sources:
         logger.info(f"downloading: {source}")
@@ -95,7 +96,7 @@ with Flow("InTaVia CHO Wikidata") as flow:
     named_graph = Parameter("Named Graph", default="http://data.acdh.oeaw.ac.at/intavia/cho")
     sparql_query = Parameter("Sparql Query File", default="convert_cho_wikidata_v3.2.sparql")
     sparql = setup_sparql_connection(endpoint)
-    temp_files = download_source_data([f"https://raw.githubusercontent.com/InTaVia/prefect-flows/master/sparql/{sparql_query}"])
+    temp_files = download_source_data(sparql_query)
     res = retrieve_cho_data_master(sparql, limit, temp_files, named_graph, max_entities, sparql_query)
 
 
