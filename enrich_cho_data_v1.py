@@ -73,6 +73,9 @@ def retrieve_cho_data(sparql, offset, limit, template, named_graph):
 
 @task(log_stdout=True)
 def retrieve_cho_data_master(sparql, limit, template, named_graph, max_entities, sparql_query):
+    logger = context.get("logger")
+    logger.info(f"start downloading data, using {sparql_query}")
+    logger.info(f"available templates: {'|'.join(template.keys())}")
     if max_entities is None:
         max_entities = retrieve_counts.run(sparql)
     offset = 0
