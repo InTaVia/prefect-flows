@@ -1,7 +1,4 @@
 PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX dc: <http://purl.org/dc/elements/1.1/>
 PREFIX dc: <http://purl.org/dc/elements/1.1/>
 PREFIX edm: <http://www.europeana.eu/schemas/edm/>
 PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
