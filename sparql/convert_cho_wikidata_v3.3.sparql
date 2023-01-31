@@ -16,7 +16,7 @@ PREFIX wds: <http://www.wikidata.org/entity/statement/>
 PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
 
 INSERT {
-  GRAPH <http://wikichotest12.at/>
+  GRAPH <$namedGraph>
         {
           ?cho a crm:E24_Physical_Human_Made_Thing,
                  idm:CHO_Proxy;
@@ -84,7 +84,8 @@ WHERE
                                                    ?artist owl:sameAs ?artistUri .
                                                    FILTER(contains(str(?artistUri), "wikidata.org"))}
                                        ORDER BY ?artist
-                          			   LIMIT 10
+                                      LIMIT $limit
+                                      OFFSET $offset
                        }
                        SERVICE <https://query.wikidata.org/sparql>
                                {
