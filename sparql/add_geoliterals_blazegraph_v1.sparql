@@ -1,0 +1,18 @@
+PREFIX geoliteral: <http://www.bigdata.com/rdf/geospatial/literals/v1#>
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+
+INSERT {
+    GRAPH <http://test.at/geo4> {
+    ?spaceprimitive crm:P168_place_is_defined_by ?geoliteral
+    }
+} WHERE {
+    {
+        SELECT ?spaceprimitive ?geoliteral
+        WHERE {
+            ?spaceprimitive a crm:E94_Space_Primitive .
+            ?spaceprimitive crm:P168_place_is_defined_by ?wkt
+            BIND(REPLACE(str(?wkt), "^Point \\( \\+?([0-9\\.\\-]+) \\+?([0-9\\.\\-]+) ?\\)$", "$1#$2"  ) as ?geoliteralStr)
+            BIND(STRDT(?geoliteralStr, geoliteral:lat-lon) as ?geoliteral)
+        }
+    }
+}
