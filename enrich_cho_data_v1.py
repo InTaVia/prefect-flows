@@ -13,14 +13,17 @@ TEMP_FOLDER = '/tmp/'
 
 @task(log_stdout=True)
 def download_source_data(sources):
+    logger = context.get("logger")
     local_files = {}
     for source in sources:
+        logger.info(f"downloading: {source}")
         local_filename = source.split('/')[-1]
         target_file = TEMP_FOLDER + local_filename
         r = requests.get(source, allow_redirects=True)
         with open(target_file, 'w') as f:
             f.write(r.text)
         local_files[local_filename] = target_file
+    logger.info(f"stored {local_files}")
     return local_files
 
 
