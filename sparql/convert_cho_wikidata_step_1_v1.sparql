@@ -40,7 +40,7 @@ INSERT {
 WHERE
 {
   {
-      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception                      {
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole               {
                        {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
