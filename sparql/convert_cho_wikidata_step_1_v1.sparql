@@ -20,8 +20,11 @@ INSERT {
         {
           ?cho a crm:E24_Physical_Human_Made_Thing,
                  idm:CHO_Proxy;
+                 crm:P1_is_identified_by ?cho_1476Title;
                bioc:bearer_of ?choProductionEventRole.
           ?cho rdfs:label ?nativeLabel .
+          ?cho_1476Title rdfs:label ?nativeLabel;
+                         a crm:E35_Title .
           ?choProductionEventRole a bioc:Thing_Role .
           ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole.
           ?choProductionEvent a crm:E12_Production.
@@ -40,7 +43,7 @@ INSERT {
 WHERE
 {
   {
-      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole               {
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title            {
                        {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
@@ -58,7 +61,10 @@ WHERE
                                           BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/production_event/") as ?choProductionEventStr)      
                                           BIND(IRI(?choProductionEventStr) as ?choProductionEvent)
                                           BIND(IRI(REPLACE(STR(?artistUri), "http://www.wikidata.org/entity", STR(idmrole:producing_artist))) as ?producingArtistRole)
-                                 OPTIONAL{?cho wdt:P1705 ?nativeLabel }
+                                 OPTIONAL{?cho wdt:P1476 ?nativeLabel .
+                                         BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
+                                          BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
+                                         }
                                  OPTIONAL{?cho wdt:P571 ?pInception. 
                                     BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/timespan_production/") as ?choProductionTimespanStr)      
                                     BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
