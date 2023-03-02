@@ -14,7 +14,7 @@ requests = "^2.27.1"
 #lxml = "^4.7.1"
 pprint36 = "^3.9.0"
 urllib3 = "^1.26.8"
-prefect = {extras = ["kubernetes"], version = "^1.2.1"}
+prefect = {extras = ["kubernetes"], git = "https://github.com/acdh-oeaw/prefect", branch="1.x"}
 owlrl = "^6.0.2"
 
 [tool.poetry.dev-dependencies]
