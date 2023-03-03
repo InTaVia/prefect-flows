@@ -22,6 +22,6 @@ spec:
         - name: archive
           mountPath: /archive
       volumes:
-        - name: archive
-          hostPath:
-            path: /archive
+        - name: prefect-archive
+          persistentVolumeClaim:
+            claimName: prefect-archive
