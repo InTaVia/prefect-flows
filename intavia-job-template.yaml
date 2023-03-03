@@ -24,4 +24,4 @@ spec:
       volumes:
         - name: prefect-archive
           persistentVolumeClaim:
-            claimName: prefect-archive
+            claimName: prefect-archive-2
