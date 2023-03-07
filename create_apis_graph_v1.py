@@ -732,7 +732,7 @@ def create_base_graph(base_uri):
 
 
 @task
-def serialize_graph(g, storage_path):
+def serialize_graph(g, storage_path, named_graph):
     Path(storage_path).mkdir(parents=True, exist_ok=True)
     for s, p, o in g.triples((None, bioc.inheres_in, None)):
         g.add((o, bioc.bearer_of, s))
@@ -799,9 +799,9 @@ with Flow("Create RDF from APIS API") as flow:
         g), unmapped(base_uri_serialization))
     places_out_filtered = filter_results(places_out)
     out = serialize_graph(
-        g, storage_path, upstream_tasks=[places_out_filtered])
+        g, storage_path, named_graph=named_graph, upstream_tasks=[places_out_filtered])
     ShellTask(
-        command=f"curl -X POST -H 'Content-Type:application/x-turtle' --data-binary '@{out}' 'https://$RDFDB_USER:$RDFDB_PASSWORD@triplestore.acdh-dev.oeaw.ac.at/intavia/sparql?context-uri={named_graph}'", named_graph=named_graph)
+        command=f"curl -X POST -H 'Content-Type:application/x-turtle' --data-binary '@{out}' 'https://$RDFDB_USER:$RDFDB_PASSWORD@triplestore.acdh-dev.oeaw.ac.at/intavia/sparql?context-uri={named_graph}'")
 #state = flow.run(executor=LocalExecutor())
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
