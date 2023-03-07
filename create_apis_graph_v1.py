@@ -805,6 +805,6 @@ with Flow("Create RDF from APIS API") as flow:
                 command=f"curl -X POST -H 'Content-Type:application/x-turtle' --data-binary '@{out}' 'https://$RDFDB_USER:$RDFDB_PASSWORD@triplestore.acdh-dev.oeaw.ac.at/intavia/sparql?context-uri={named_graph}'")
 # state = flow.run(executor=LocalExecutor())
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
-                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="python:3.10")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
                       path="create_apis_graph_v1.py")
