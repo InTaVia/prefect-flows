@@ -746,7 +746,7 @@ filter_results = FilterTask(
     filter_func=lambda x: not isinstance(x, (BaseException, SKIP, type(None)))
 )
 
-upload_data = ShellTask()
+upload_data = ShellTask(log_stderr=True, return_all=True)
 
 with Flow("Create RDF from APIS API") as flow:
     max_entities = Parameter("Max Entities", default=None)
@@ -803,7 +803,7 @@ with Flow("Create RDF from APIS API") as flow:
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     upload_data(upstream_tasks=[out],
                 command=f"curl -X POST -H 'Content-Type:application/x-turtle' --data-binary '@{out}' 'https://$RDFDB_USER:$RDFDB_PASSWORD@triplestore.acdh-dev.oeaw.ac.at/intavia/sparql?context-uri={named_graph}'")
-#state = flow.run(executor=LocalExecutor())
+# state = flow.run(executor=LocalExecutor())
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
