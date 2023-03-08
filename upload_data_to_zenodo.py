@@ -75,6 +75,6 @@ with Flow("Upload RDF files to Zenodo") as flow:
 #                 "path to RDF file": "/workspaces/prefect-flows/testdata", "Deposition ID": "7708728"})
 
 flow.run_config = KubernetesRun(
-    env={"EXTRA_PIP_PACKAGES": "requests"}, job_template_path="/intavia-job-template.yaml")
+    env={"EXTRA_PIP_PACKAGES": "requests"}, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
                       path="upload_data_to_zenodo.py")
