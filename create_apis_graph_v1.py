@@ -14,7 +14,7 @@ from typing import Any, Tuple
 from prefect.tasks.control_flow.filter import FilterTask
 from prefect.tasks.shell import ShellTask
 
-from prefect.engine.signals import LOOP, SUCCESS, SKIP, RETRY
+from prefect.engine.signals import LOOP, SUCCESS, SKIP, RETRY, FAIL
 
 BASE_URL_API = 'http://localhost:5000/apis/api'
 BASE_URI_SERIALIZATION = 'https://apis.acdh.oeaw.ac.at/'
@@ -756,12 +756,15 @@ def upload_data(f_path, named_graph, sparql_endpoint=None):
         "Content-Type": "application/binary",
     }
     params = {'context-uri': named_graph}
+    if sparql_endpoint is None:
+        sparql_endpoint = "https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql"
     logger.info(
         f"Uploading data to {sparql_endpoint} with params {params}, loading file from {f_path}")
-    if sparql_endpoint is None:
-        sparql_endpoint = "http://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql"
     upload = requests.post(sparql_endpoint, data=data, headers=headers, params=params, auth=requests.auth.HTTPBasicAuth(
         os.environ.get('RDFDB_USER'), os.environ.get('RDFDB_PASSWORD')))
+    logger.info(f"Upload status: {upload.status_code}")
+    if upload.status_code != 200:
+        raise FAIL(f"Upload failed with status code {upload.status_code}")
 
 
 with Flow("Create RDF from APIS API") as flow:
