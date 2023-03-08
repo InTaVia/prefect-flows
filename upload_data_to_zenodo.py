@@ -71,10 +71,10 @@ with Flow("Upload RDF files to Zenodo") as flow:
     deposition = update_deposition(metadata, deposition)
     upload_files(path, deposition)
 
-state = flow.run(executor=LocalExecutor(), parameters={
-                 "path to RDF file": "/workspaces/prefect-flows/testdata", "Deposition ID": "7708728"})
+# state = flow.run(executor=LocalExecutor(), parameters={
+#                 "path to RDF file": "/workspaces/prefect-flows/testdata", "Deposition ID": "7708728"})
 
-# flow.run_config = KubernetesRun(
-#   env={"EXTRA_PIP_PACKAGES": "requests"}, job_template_path="/intavia-job-template.yaml")
-# flow.storage = GitHub(repo="InTaVia/prefect-flows",
-#                     path="ingest_mock_data_flow.py")
+flow.run_config = KubernetesRun(
+    env={"EXTRA_PIP_PACKAGES": "requests"}, job_template_path="/intavia-job-template.yaml")
+flow.storage = GitHub(repo="InTaVia/prefect-flows",
+                      path="upload_data_to_zenodo.py")
