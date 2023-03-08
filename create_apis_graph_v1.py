@@ -753,7 +753,7 @@ def upload_data(f_path, named_graph, sparql_endpoint=None):
     logger = prefect.context.get("logger")
     data = open(f_path, 'rb').read()
     headers = {
-        "Content-Type": "application/binary",
+        "Content-Type": "application/x-turtle",
     }
     params = {'context-uri': named_graph}
     if sparql_endpoint is None:
