@@ -18,6 +18,11 @@ spec:
               secretKeyRef:
                 name: intavia-platform-secrets
                 key: workflow_rdfdb_password
+          - name: ZENODO_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: intavia-platform-secrets
+                key: workflow_zenodo_api_token
         volumeMounts:
         - name: prefect-archive
           mountPath: /archive
