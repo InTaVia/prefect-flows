@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import prefect
 from prefect.storage import GitHub
@@ -746,7 +747,22 @@ filter_results = FilterTask(
     filter_func=lambda x: not isinstance(x, (BaseException, SKIP, type(None)))
 )
 
-upload_data = ShellTask(log_stderr=True, return_all=True)
+
+@task
+def upload_data(f_path, named_graph, sparql_endpoint=None):
+    logger = prefect.context.get("logger")
+    data = open(f_path, 'rb').read()
+    headers = {
+        "Content-Type": "application/binary",
+    }
+    params = {'context-uri': named_graph}
+    logger.info(
+        f"Uploading data to {sparql_endpoint} with params {params}, loading file from {f_path}")
+    if sparql_endpoint is None:
+        sparql_endpoint = "http://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql"
+    upload = requests.post(sparql_endpoint, data=data, headers=headers, params=params, auth=requests.auth.HTTPBasicAuth(
+        os.environ.get('RDFDB_USER'), os.environ.get('RDFDB_PASSWORD')))
+
 
 with Flow("Create RDF from APIS API") as flow:
     max_entities = Parameter("Max Entities", default=None)
@@ -801,10 +817,9 @@ with Flow("Create RDF from APIS API") as flow:
     places_out_filtered = filter_results(places_out)
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
-    upload_data(upstream_tasks=[out],
-                command=f"curl -X POST -H 'Content-Type:application/x-turtle' --data-binary '@{out}' 'https://$RDFDB_USER:$RDFDB_PASSWORD@triplestore.acdh-dev.oeaw.ac.at/intavia/sparql?context-uri={named_graph}'")
+    upload_data(out, named_graph, upstream_tasks=[out])
 # state = flow.run(executor=LocalExecutor())
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
-                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="python:3.10")
+                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
                       path="create_apis_graph_v1.py")
