@@ -26,9 +26,10 @@ INSERT {
           ?cho_1476Title rdfs:label ?nativeLabel;
                          a crm:E35_Title .
           ?choProductionEventRole a bioc:Thing_Role .
-          ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole.
-          ?choProductionEvent a crm:E12_Production.
-          ?choProductionEvent crm:P4_has_time-span ?choProductionTimespan.
+          ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole ;
+                             a crm:E12_Production ;
+                             crm:P4_has_time-span ?choProductionTimespan ;
+                             rdfs:label ?eventLabel .
           ?choProductionTimespan rdfs:label ?pInception;
                 crm:P82a_beginning_of_the_begin ?pInception ;
                 crm:P82b_end_of_the_end ?pInception .
@@ -43,8 +44,8 @@ INSERT {
 WHERE
 {
   {
-      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel         {
-                       {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel       {
+                       {SELECT ?artist ?artistUri ?artistLabel1 {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
                                                    FILTER(contains(str(?artistUri), "wikidata.org"))}
@@ -61,15 +62,24 @@ WHERE
                                           BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/production_event/") as ?choProductionEventStr)      
                                           BIND(IRI(?choProductionEventStr) as ?choProductionEvent)
                                           BIND(IRI(REPLACE(STR(?artistUri), "http://www.wikidata.org/entity", STR(idmrole:producing_artist))) as ?producingArtistRole)
-                                 OPTIONAL{?cho wdt:P1476 ?nativeLabel .
-                                         BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
+                                          BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
                                           BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
+                                 OPTIONAL{?cho wdt:P1476 ?nativeLabel1 .
+                                         }
+                                  OPTIONAL{?cho wdt:P1705 ?nativeLabel4}
+                                 OPTIONAL{?cho rdfs:label ?nativeLabel2
+                                         FILTER(lang(?nativeLabel2) = "en")
+                                         }
+                                  OPTIONAL{?cho rdfs:label ?nativeLabel3
+                                         FILTER(lang(?nativeLabel3) = "de")
                                          }
                                  OPTIONAL{?cho wdt:P571 ?pInception. 
                                     BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/timespan_production/") as ?choProductionTimespanStr)      
                                     BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
                                 }
                                  OPTIONAL{?cho wdt:P1071 ?locationofcreation}
+                                 BIND(COALESCE(?nativeLabel1, ?nativeLabel4, ?nativeLabel2, ?nativeLabel3) as ?nativeLabel)
+                                 BIND(CONCAT(str(?artistLabel1), " created ", str(?nativeLabel)) as ?eventLabel)
                                  }
                                }
                      }
