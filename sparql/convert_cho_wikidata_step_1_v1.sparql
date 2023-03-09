@@ -47,7 +47,7 @@ WHERE
 {
   {
       SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image      {
-                       {SELECT ?artist ?artistUri ?artistLabel1 {?artist a crm:E21_Person .
+                       {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
                                                    FILTER(contains(str(?artistUri), "wikidata.org"))}
@@ -81,6 +81,10 @@ WHERE
                                 }
                                  OPTIONAL{?cho wdt:P1071 ?locationofcreation}
                                  OPTIONAL{?cho wdt:P18 ?cho_image.}
+                                 OPTIONAL{
+                                          ?artistUri rdfs:label ?artistLabel1 .
+                                          FILTER(lang(?artistLabel1) in ("de", "en"))
+                                          }
                                  BIND(COALESCE(?nativeLabel1, ?nativeLabel4, ?nativeLabel2, ?nativeLabel3) as ?nativeLabel)
                                  BIND(CONCAT(str(?artistLabel1), " created ", str(?nativeLabel)) as ?eventLabel)
                                  }
