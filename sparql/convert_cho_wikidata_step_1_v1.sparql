@@ -23,6 +23,8 @@ INSERT {
                  crm:P1_is_identified_by ?cho_1476Title;
                bioc:bearer_of ?choProductionEventRole.
           ?cho rdfs:label ?nativeLabel .
+          ?cho_image crm:P70_documents ?cho;
+                     a crm:E31_Document.
           ?cho_1476Title rdfs:label ?nativeLabel;
                          a crm:E35_Title .
           ?choProductionEventRole a bioc:Thing_Role .
@@ -44,7 +46,7 @@ INSERT {
 WHERE
 {
   {
-      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel       {
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image      {
                        {SELECT ?artist ?artistUri ?artistLabel1 {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
@@ -78,6 +80,7 @@ WHERE
                                     BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
                                 }
                                  OPTIONAL{?cho wdt:P1071 ?locationofcreation}
+                                 OPTIONAL{?cho wdt:P18 ?cho_image.}
                                  BIND(COALESCE(?nativeLabel1, ?nativeLabel4, ?nativeLabel2, ?nativeLabel3) as ?nativeLabel)
                                  BIND(CONCAT(str(?artistLabel1), " created ", str(?nativeLabel)) as ?eventLabel)
                                  }
