@@ -369,10 +369,10 @@ def render_person(person, g, base_uri):
         g.add((pers_uri, owl.sameAs, URIRef(uri)))
     if "text" in person:
         if len(person['text']) > 1:
-            g.add((pers_uri), idmcore.bio_link,
-                  URIRef(person['text'][0]['url']))
-            g.add((pers_uri), idmcore.short_bio_link,
-                  URIRef(person['text'][1]['url']))
+            g.add((pers_uri, idmcore.bio_link,
+                  URIRef(person['text'][0]['url'])))
+            g.add((pers_uri, idmcore.short_bio_link,
+                  URIRef(person['text'][1]['url'])))
     # add occupations
 
 #    person_rel = await get_person_relations(person['id'], kinds=['personinstitution', 'personperson', 'personplace'])
@@ -394,7 +394,7 @@ def render_person(person, g, base_uri):
     return g
 
 
-@task()
+@ task()
 def render_organizationplace_relation(rel, g):
     place = None
     node_org = URIRef(
@@ -407,7 +407,7 @@ def render_organizationplace_relation(rel, g):
     return place
 
 
-@task()
+@ task()
 def render_organization(organization, g, base_uri):
     """renders organization object as RDF graph
 
@@ -519,7 +519,7 @@ def render_event(event, event_type, node_event, g):
     return g
 
 
-@task()
+@ task()
 def render_place(place, g, base_uri):
     """renders place object as RDF graph
 
@@ -568,7 +568,7 @@ def render_place(place, g, base_uri):
     return g
 
 
-@task(max_retries=2, retry_delay=timedelta(minutes=1))
+@ task(max_retries=2, retry_delay=timedelta(minutes=1))
 def get_persons(base_uri, filter_params):
     """gets persons from API
 
@@ -596,7 +596,7 @@ def get_persons(base_uri, filter_params):
     return res_fin
 
 
-@task(max_retries=2, retry_delay=timedelta(minutes=1))
+@ task(max_retries=2, retry_delay=timedelta(minutes=1))
 def get_entity(entity_id, entity_type, base_uri):
     """gets organization object from API
 
@@ -618,7 +618,7 @@ def get_entity(entity_id, entity_type, base_uri):
         return res.json()
 
 
-@task(max_retries=2, retry_delay=timedelta(minutes=1))
+@ task(max_retries=2, retry_delay=timedelta(minutes=1))
 def get_entity_relations(base_uri, entity, kind, related_entity_type):
     """gets entity relations from API
 
@@ -652,7 +652,7 @@ def get_entity_relations(base_uri, entity, kind, related_entity_type):
     return res_full
 
 
-@task()
+@ task()
 def create_base_graph(base_uri):
     global crm
     crm = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
@@ -738,7 +738,7 @@ def create_base_graph(base_uri):
     return g
 
 
-@task
+@ task
 def serialize_graph(g, storage_path, named_graph):
     Path(storage_path).mkdir(parents=True, exist_ok=True)
     for s, p, o in g.triples((None, bioc.inheres_in, None)):
@@ -754,7 +754,7 @@ filter_results = FilterTask(
 )
 
 
-@task
+@ task
 def upload_data(f_path, named_graph, sparql_endpoint=None):
     logger = prefect.context.get("logger")
     data = open(f_path, 'rb').read()
@@ -828,7 +828,7 @@ with Flow("Create RDF from APIS API") as flow:
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     upload_data(out, named_graph, upstream_tasks=[out])
 # state = flow.run(executor=LocalExecutor(), parameters={
-#                 'Filter Parameters': {"collection": 86, 'first_name': 'Markus'}, 'Storage Path': '/workspaces/prefect-flows'})
+#     'Filter Parameters': {"collection": 86, 'first_name': 'Markus'}, 'Storage Path': '/workspaces/prefect-flows'})
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
