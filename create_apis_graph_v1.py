@@ -589,7 +589,10 @@ def get_persons(base_uri, filter_params):
     res = requests.get(next_url, params=filter_params)
     if res.status_code != 200:
         logger.warn(f"Error getting persons: {res.status_code} / {res.text}")
-        raise RETRY
+        logger.warn(f"tried {next_url} with params {filter_params}")
+        raise FAIL
+    else:
+        logger.info(f"Got persons {next_url}")
     res = res.json()
     res_fin.extend(res["results"])
     if res["next"] is not None:
