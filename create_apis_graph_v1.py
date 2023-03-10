@@ -369,9 +369,11 @@ def render_person(person, g, base_uri):
         g.add((pers_uri, owl.sameAs, URIRef(uri)))
     if "text" in person:
         if len(person['text']) > 1:
-            g.add((pers_uri, idmcore.bio_link,
+            g.add((pers_uri, idmcore.bio_link, URIRef(
+                f"{idmapis}text/{person['id']}/bio")))
+            g.add((URIRef(f"{idmapis}text/{person['id']}/bio"), idmcore.full_bio_link,
                   URIRef(person['text'][0]['url'])))
-            g.add((pers_uri, idmcore.short_bio_link,
+            g.add((URIRef(f"{idmapis}text/{person['id']}/bio"), idmcore.short_bio_link,
                   URIRef(person['text'][1]['url'])))
     # add occupations
 
