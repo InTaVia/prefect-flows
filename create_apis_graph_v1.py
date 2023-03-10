@@ -198,7 +198,7 @@ def render_personinstitution_relation(rel: dict, g: Graph) -> list:
     pers_uri = URIRef(f"{idmapis}personproxy/{rel['related_person']['id']}")
     inst = None
     # connect personproxy and institutions with grouprelationship
-    n_rel_type = URIRef(f"{idmapis}grouprelation/{rel['relation_type']['id']}")
+    n_rel_type = URIRef(f"{idmapis}grouprelation/{rel['id']}")
     g.add((pers_uri, bioc.has_group_relation, n_rel_type))
     # Person has a specific group relation
     g.add((n_rel_type, RDF.type, URIRef(
@@ -367,6 +367,12 @@ def render_person(person, g, base_uri):
         g.add((pers_uri, bioc.has_gender, bioc[person["gender"].capitalize()]))
     for uri in person['sameAs']:
         g.add((pers_uri, owl.sameAs, URIRef(uri)))
+    if "text" in person:
+        if len(person['text']) > 1:
+            g.add((pers_uri), idmcore.bio_link,
+                  URIRef(person['text'][0]['url']))
+            g.add((pers_uri), idmcore.short_bio_link,
+                  URIRef(person['text'][1]['url']))
     # add occupations
 
 #    person_rel = await get_person_relations(person['id'], kinds=['personinstitution', 'personperson', 'personplace'])
@@ -821,7 +827,8 @@ with Flow("Create RDF from APIS API") as flow:
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     upload_data(out, named_graph, upstream_tasks=[out])
-# state = flow.run(executor=LocalExecutor())
+# state = flow.run(executor=LocalExecutor(), parameters={
+#                 'Filter Parameters': {"collection": 86, 'first_name': 'Markus'}, 'Storage Path': '/workspaces/prefect-flows'})
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
