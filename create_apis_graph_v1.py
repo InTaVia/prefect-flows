@@ -586,6 +586,8 @@ def get_persons(base_uri, filter_params):
         filter_params["limit"] = 100
     if "format" not in filter_params:
         filter_params["format"] = "json"
+    if "?" in next_url:
+        filter_params = {}
     res = requests.get(next_url, params=filter_params)
     if res.status_code != 200:
         logger.warn(f"Error getting persons: {res.status_code} / {res.text}")
@@ -833,7 +835,7 @@ with Flow("Create RDF from APIS API") as flow:
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     upload_data(out, named_graph, upstream_tasks=[out])
 # state = flow.run(executor=LocalExecutor(), parameters={
-#     'Filter Parameters': {"collection": 86, 'first_name': 'Markus'}, 'Storage Path': '/workspaces/prefect-flows'})
+#     'Filter Parameters': {"collection": 86}, 'Storage Path': '/workspaces/prefect-flows'})
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
