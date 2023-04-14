@@ -22,6 +22,9 @@ This plugin uses reference resources URIs (such as GND and wikidata) to find the
 ## Enrich cho data (available in a first version)
 This plugin uses the wikidata identifier added by the "Person id linker" plugin to search wikidata for persons and then downloads cultural heritage objects linked to these persons from wikidata. Before ingesting it into the InTaVia KB it converts the data to the IDM-RDF datamodel. To avoid timeouts it has a configurable number of persons it works on in parallel and it also allows to set the target named graph.
 
+## Enrich wikidata interperson relations (available in a first version)
+This plugin uses the wikidata identifier added by the "Person id linker" plugin to search wikidata for interperson relations connected the people in InTaVia dataset. The relations can be genealogical (parent, child, spouse, ...), educations (teacher, student, supervisor, ..), or related to career (co-worker, influencer, ...). Current implementations first queries the Wikidata identifiers from the InTaVia triplestore, and uses the found links to extract the results from Wikidata triplestore.
+
 # Upcoming improvements
 During work on the flows we came across several shortcomings of the structure we had in mind when designing the plugin system.
 
