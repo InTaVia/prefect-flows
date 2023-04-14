@@ -251,7 +251,7 @@ def write_graph_to_file(graph, file):
     graph.serialize(file)
 
 
-with Flow("Wikidata Relation Enrichment") as flow:
+with Flow("InTaVia links from ULAN") as flow:
     environment = Parameter("environment", default="production")
     endpoint = Parameter("endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql")
     wd_endpoint = Parameter("wd_endpoint", default="https://query.wikidata.org/sparql")
