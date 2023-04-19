@@ -1,0 +1,93 @@
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX bd: <http://www.bigdata.com/rdf#>
+PREFIX idm: <https://www.intavia.eu/idm/>
+PREFIX idmrole: <https://www.intavia.eu/idm/role/>
+PREFIX bioc: <http://ldf.fi/schema/bioc/>
+PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+PREFIX schema: <http://schema.org/>
+PREFIX psn: <http://www.wikidata.org/prop/statement/value-normalized/>
+PREFIX wds: <http://www.wikidata.org/entity/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+INSERT {
+  GRAPH <$namedGraph>
+        {
+          ?cho a crm:E24_Physical_Human_Made_Thing,
+                 idm:CHO_Proxy;
+                 crm:P1_is_identified_by ?cho_1476Title;
+               bioc:bearer_of ?choProductionEventRole.
+          ?cho rdfs:label ?nativeLabel .
+          ?cho_image crm:P70_documents ?cho;
+                     a crm:E31_Document.
+          ?cho_1476Title rdfs:label ?nativeLabel;
+                         a crm:E35_Title .
+          ?choProductionEventRole a bioc:Thing_Role .
+          ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole ;
+                             a crm:E12_Production ;
+                             crm:P4_has_time-span ?choProductionTimespan ;
+                             rdfs:label ?eventLabel .
+          ?choProductionTimespan rdfs:label ?pInception;
+                crm:P82a_beginning_of_the_begin ?pInception ;
+                crm:P82b_end_of_the_end ?pInception .
+          ?choProductionEvent crm:P7_took_place_at ?locationofcreation.
+          ?locationofcreation a crm:E53_Place .
+          ?choProductionEvent bioc:had_participant_in_role ?producingArtistRole .
+          ?artist bioc:bearer_of ?producingArtistRole .
+          ?producingArtistRole a idmrole:producing_artist .
+          idmrole:producing_artist rdfs:label "producing artist"@en
+        }
+}
+WHERE
+{
+  {
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image      {
+                       {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
+                                                   ?artist rdfs:label ?artistLabel1 .
+                                                   ?artist owl:sameAs ?artistUri .
+                                                   FILTER(contains(str(?artistUri), "wikidata.org"))}
+                                       ORDER BY ?artist
+                                      LIMIT $limit
+                                      OFFSET $offset
+                                      
+                       }
+                       SERVICE <https://query.wikidata.org/sparql>
+                               {
+                               ?cho wdt:P170 ?artistUri .
+                                          BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/productionthingrole/") as ?choProductionEventRoleStr)      
+                                          BIND(IRI(?choProductionEventRoleStr) as ?choProductionEventRole)
+                                          BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/production_event/") as ?choProductionEventStr)      
+                                          BIND(IRI(?choProductionEventStr) as ?choProductionEvent)
+                                          BIND(IRI(REPLACE(STR(?artistUri), "http://www.wikidata.org/entity", STR(idmrole:producing_artist))) as ?producingArtistRole)
+                                          BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
+                                          BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
+                                 OPTIONAL{?cho wdt:P1476 ?nativeLabel1 .
+                                         }
+                                  OPTIONAL{?cho wdt:P1705 ?nativeLabel4}
+                                 OPTIONAL{?cho rdfs:label ?nativeLabel2
+                                         FILTER(lang(?nativeLabel2) = "en")
+                                         }
+                                  OPTIONAL{?cho rdfs:label ?nativeLabel3
+                                         FILTER(lang(?nativeLabel3) = "de")
+                                         }
+                                 OPTIONAL{?cho wdt:P571 ?pInception. 
+                                    BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/timespan_production/") as ?choProductionTimespanStr)      
+                                    BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
+                                }
+                                 OPTIONAL{?cho wdt:P1071 ?locationofcreation}
+                                 OPTIONAL{?cho wdt:P18 ?cho_image.}
+                                 OPTIONAL{
+                                          ?artistUri rdfs:label ?artistLabel1 .
+                                          FILTER(lang(?artistLabel1) in ("de", "en"))
+                                          }
+                                 BIND(COALESCE(?nativeLabel1, ?nativeLabel4, ?nativeLabel2, ?nativeLabel3) as ?nativeLabel)
+                                 BIND(CONCAT(str(?artistLabel1), " created ", str(?nativeLabel)) as ?eventLabel)
+                                 }
+                               }
+                     }
+  }

@@ -1,0 +1,183 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX edm: <http://www.europeana.eu/schemas/edm/>
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX bd: <http://www.bigdata.com/rdf#>
+PREFIX idm: <https://www.intavia.org/idm/>
+PREFIX idmrole: <https://www.intavia.org/idm/role/>
+PREFIX bioc: <http://ldf.fi/schema/bioc/>
+PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+PREFIX schema: <http://schema.org/>
+PREFIX psn: <http://www.wikidata.org/prop/statement/value-normalized/>
+PREFIX wds: <http://www.wikidata.org/entity/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+INSERT {
+  GRAPH <$namedGraph>
+        {
+            ?cho a crm:E24_Physical_Human_Made_Thing,
+                idm:CHO_Proxy;
+            # Note: according to Europeana, edm:Event has not implemented
+            bioc:bearer_of ?choProductionEventRole;
+            crm:P2_has_type ?dc_type_uri;
+            # There are several options, the most general node is mapped below. How to map dc:identifier? (there is potentially issues for the distinction between ID of digital (URI) and ID of pyhsical CHO (e.g. museum object number)) In case of Wikidata, how was the mapping done? Are there CHO proxies?
+            crm:P1_is_identified_by ?item;
+            crm:P1_is_identified_by ?item_id;
+            # What to map here (title or Description are mandatory and used for labels for ?item
+            rdfs:label ?dc_title;
+            crm:P3_has_note ?dc_description;
+            # pasPart may not be URI
+            crm:P45_consists_of ?dcterms_medium;
+            crm:P62:depicts ?dc_subject;
+            crm:P53_has_former_or_current_location ?edm_currentLocation;
+            # isPartOf may not be URI (collection name etc)
+            crm:P46_is_composed_of ?dcterms_isPartOf;
+            crm:P128_carries ?cho_inscription.
+            #the following would be needed for mapping
+            # how to map dc:coverage and ?dc_coverage_uri ? Is it different from crm:P62:depicts? (dc:subject is more towards classifications)
+            # how to map dc:format ? (may include physical dimension, but also digital file format (jpg). see digital representation below)
+            # how to map dc:source ?
+
+            # EDM has a distinction between pyhsical CHO and its digital representation (?item is EDM item node in this context)
+            # how to map ?edm_webResource ?
+            # how to map ?edm_object ?
+            # how to map ?edm_isShownAt ?
+            # how to map ?edm_isShownBy ?
+            # The above are similar but not exactly the same. All are URIs
+            # Check also modelling example here: https://docs.swissartresearch.net/et/do/ 
+            ?cho_do crm:P138_represents ?cho;
+                a ?edm_type.
+            ?cho_do crm:P1_is_identified_by ?cho_do_id.
+            ?cho_do_id rdfs:label ?item; rdfs:label ?edm_object; rdfs:label ?edm_isShownAt; rdfs:label ?edm_isShownBy; rdfs:label ?edm_webResource 
+                a crm:E42_Identifier.
+            
+
+            # What kind of image is this? (?item ?WebResource ?)
+            ?cho_image crm:P70_documents ?cho;
+                    a crm:E31_Document.
+            #How to map dc:identifier?  This item is difital representation
+            ?item rdfs:label ?dc_title;
+                        a crm:E35_Title .
+            ?item_id rdfs:label ?dc_identifier;
+                        a crm:E42_Identifier .
+            # pasPart may not be URI
+            ?dcterms_hasPart crm:P46_is_composed_of ?cho.
+            # pasPart may not be URI. Also not sure if label is always given
+            ?edm_currentLocation a crm:E53_Place.
+            ?edm_currentLocation rdfs:label ?locationLabel.
+            # To include dc:language
+            ?cho_inscription crm:P190_has_symbolic_content ?inscription.
+            ?cho_inscription a crm:E90_Symbolic_Object.
+            # Something like Linguistic Object might be needed to include dc:language?
+            ?cho_linguistic_object a crm:E33_Linguistic_Object. 
+            ?cho_linguistic_object crm:P72_has_language ?cho_language.
+            ?cho_language a crm:E56_Language; rdfs:label ?dc_language.
+            # How to map when there are sometimes several types for type labels (as well as "normalised" controlled vocabukary in URIs). 
+            # Note that such URIs are optional and "normalised" controlled vocabukary in URIs are not always 100% corresponding to labels (e.g. could be different language)
+            ?dc_type_uri
+                rdfs:label ?dc_type.
+
+            # Note: according to Europeana, edm:Event has not implemented (where comes creators and contributors in Production Event?)
+            ?choProductionEventRole a bioc:Thing_Role .
+            ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole.
+            ?choProductionEvent a crm:E12_Production.
+            ?choProductionEvent crm:P4_has_time-span ?choProductionTimespan.
+            ?choProductionTimespan rdfs:label ?dc_date.
+            # Location would be implicit in Europeana data
+            ?choProductionEvent crm:P7_took_place_at ?locationofcreation.
+            ?locationofcreation a crm:E53_Place;
+                            rdfs:label ?locationofcreationLabel.
+            # medium would not have URI
+            ?dcterms_medium rdfs:label ?dcterms_medium.
+            ?depictedSubject rdfs:label ?dsubjectLabel;
+                        crm:P2_has_type ?dsubjectclass.
+            # According to Europeana, edm:Event has not implemented
+            ?cho_measurement_event a crm:E16_Measurement.
+            ?cho_measurement_event crm:P39_measured ?cho;
+                                crm:P40_observed_dimension ?dcterms_extent, ?cho_dimension_height, ?cho_dimension_width .
+
+            # It would not be easy to map, as dimensions are often strings including unit
+            ?cho_dimension_height a crm:E54_Dimension;
+                        crm:P91_has_unit ?qunit;
+                        rdfs:label ?heightvalue;
+                        crm:P2_has_type wd:Q208826.
+            ?cho_dimension_width a crm:E54_Dimension;
+                        crm:P91_has_unit ?qunit;
+                        crm:P2_has_type wd:Q35059;
+                        rdfs:label ?widthtvalue.
+            ?qunit a crm:E58_Measurement_Unit.
+
+            # It is possible to try to use digital collection, ("collection" from the viewpoint of Europeana i.e. aggregation), but the physical collection (of museums) would be normally in encoded in dcterms:isPartOf
+            ?collection a crm:E78_Curated_Holding;
+                    crm:P46_is_composed_of ?cho;
+                    rdfs:label ?collectionLabel.
+        }
+}
+WHERE
+{
+  {
+      SELECT ?artist ?cho ?choLabel ?choProductionEvent ?choProductionEventRole ?choTitle ?cho_1476Title ?depictedSubject ?dsubjectLabel ?cho_measurement_event ?class ?classLabel ?chordfsLabel ?description ?cho_material ?choProductionTimespan ?materialLabel ?collectionLabel ?collection ?qunit ?cho_dimension_height ?cho_dimension_width ?widthtvalue ?heightvalue ?mainsubjectLabel ?mainsubjectclass ?locationofcreation ?locationofcreationLabel ?pInception ?cho_inscription ?inscription ?cho_image
+                     {
+                       {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
+                                                   ?artist rdfs:label ?artistLabel1 .
+                                                   ?artist owl:sameAs ?artistUri .
+                                                   FILTER(contains(str(?artistUri), "wikidata.org"))}
+                                       ORDER BY ?artist
+                          			   LIMIT 500
+                       }
+                       SERVICE <https://sparql.europeana.eu/>
+                               {
+                                    select DISTINCT ?provider_proxy ?item ?dc_creator ?dc_contributor ?dc_coverage ?dc_date ?dc_description ?dc_format ?dcterms_hasPart ?dc_identifier ?dcterms_isPartOf ?dc_language ?dc_source ?dc_subject ?dc_title ?dc_type ?dcterms_extent ?dcterms_medium ?edm_currentLocation ?edm_type ?dc_creator_uri ?dc_coverage_uri ?dc_type_uri ?provider_agg ?edm_rights ?edm_webResource ?edm_object ?edm_isShownAt ?edm_isShownBy
+                                    where {
+                                    ?dc_creator_uri owl:sameAs ?artistUri .
+                                    ?europeana_proxy dc:creator ?dc_creator_uri .
+                                    OPTIONAL {?europeana_proxy dc:coverage ?dc_coverage_uri}
+                                    OPTIONAL {?europeana_proxy dc:type ?dc_type_uri }
+
+                                    # Shortcut technique to avoid hopping many nodes (for the 2 subqueries below and )
+                                    BIND(IRI(REPLACE(str(?europeana_proxy), "http://data.europeana.eu/proxy/europeana/", "http://data.europeana.eu/proxy/provider/")) AS ?provider_proxy)
+                                    BIND(IRI(REPLACE(str(?europeana_proxy), "http://data.europeana.eu/proxy/europeana/", "http://data.europeana.eu/aggregation/provider/")) AS ?provider_agg)
+                                    BIND(IRI(REPLACE(str(?europeana_proxy), "http://data.europeana.eu/proxy/europeana/", "http://data.europeana.eu/item/")) AS ?item)
+                                    
+                                    {select DISTINCT ?provider_proxy ?dc_creator ?dc_contributor ?dc_coverage ?dc_date ?dc_description ?dc_format ?dcterms_hasPart ?dc_identifier ?dcterms_isPartOf ?dc_language ?dc_source ?dc_subject ?dc_title ?dc_type ?dcterms_extent ?dcterms_medium ?edm_currentLocation ?edm_type
+                                        where {
+                                        ?provider_proxy edm:type ?edm_type
+                                        OPTIONAL {?provider_proxy dc:creator ?dc_creator}
+                                        OPTIONAL {?provider_proxy dc:contributor ?dc_contributor}
+                                        OPTIONAL {?provider_proxy dc:coverage ?dc_coverage}
+                                        OPTIONAL {?provider_proxy dc:date ?dc_date}
+                                        OPTIONAL {?provider_proxy dc:description ?dc_description}
+                                        OPTIONAL {?provider_proxy dc:format ?dc_format}
+                                        OPTIONAL {?provider_proxy dcterms:hasPart ?dcterms_hasPart}
+                                        OPTIONAL {?provider_proxy dc:identifier ?dc_identifier}
+                                        OPTIONAL {?provider_proxy dcterms:isPartOf ?dcterms_isPartOf}
+                                        OPTIONAL {?provider_proxy dc:language ?dc_language}
+                                        OPTIONAL {?provider_proxy dc:source ?dc_source}
+                                        OPTIONAL {?provider_proxy dc:subject ?dc_subject}
+                                        OPTIONAL {?provider_proxy dc:title ?dc_title}
+                                        OPTIONAL {?provider_proxy dc:type ?dc_type}
+                                        OPTIONAL {?provider_proxy dcterms:extent ?dcterms_extent}
+                                        OPTIONAL {?provider_proxy dcterms:medium ?dcterms_medium}
+                                        OPTIONAL {?provider_proxy edm:currentLocation ?edm_currentLocation}
+                                        }
+                                    }
+
+                                    {select DISTINCT ?provider_agg ?edm_rights ?edm_webResource ?edm_object ?edm_isShownAt ?edm_isShownBy  
+                                        where {
+                                        ?provider_agg edm:rights ?edm_rights
+                                        OPTIONAL {?provider_agg edm:hasView ?edm_webResource}
+                                        OPTIONAL {?provider_agg edm:object ?edm_object}
+                                        OPTIONAL {?provider_agg edm:isShownAt ?edm_isShownAt}
+                                        OPTIONAL {?provider_agg edm:isShownBy ?edm_isShownBy}
+                                        }
+                                    }
+
+                                    }
+                                    ORDER BY ASC(?provider_proxy)
+                                 }

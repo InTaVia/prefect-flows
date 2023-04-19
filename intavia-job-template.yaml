@@ -18,10 +18,15 @@ spec:
               secretKeyRef:
                 name: intavia-platform-secrets
                 key: workflow_rdfdb_password
+          - name: ZENODO_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: intavia-platform-secrets
+                key: workflow_zenodo_api_token
         volumeMounts:
-        - name: archive
+        - name: prefect-archive
           mountPath: /archive
       volumes:
-        - name: archive
-          hostPath:
-            path: /archive
+        - name: prefect-archive
+          persistentVolumeClaim:
+            claimName: prefect-archive-2

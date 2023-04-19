@@ -1,0 +1,5 @@
+backend = "server"
+[server]
+endpoint = "https://prefect-apollo.acdh-ch-dev.oeaw.ac.at/graphql"
+  [server.ui]
+  apollo_url="https://prefect-apollo.acdh-ch-dev.oeaw.ac.at/graphql"

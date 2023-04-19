@@ -1,0 +1,157 @@
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX bd: <http://www.bigdata.com/rdf#>
+PREFIX idm: <https://www.intavia.org/idm/>
+PREFIX idmrole: <https://www.intavia.org/idm/role/>
+PREFIX bioc: <http://ldf.fi/schema/bioc/>
+PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+PREFIX schema: <http://schema.org/>
+PREFIX psn: <http://www.wikidata.org/prop/statement/value-normalized/>
+PREFIX wds: <http://www.wikidata.org/entity/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+INSERT {
+  GRAPH <$namedGraph>
+        {
+          ?cho a crm:E24_Physical_Human_Made_Thing,
+                 idm:CHO_Proxy;
+               bioc:bearer_of ?choProductionEventRole;
+               crm:P2_has_type ?class;
+               crm:P1_is_identified_by ?cho_1476Title;
+               rdfs:label ?chordfsLabel;
+               crm:P3_has_note ?description;
+               crm:P45_consists_of ?cho_material;
+               crm:P62:depicts ?depictedSubject;
+               crm:P62:depicts ?mainsubject;
+               crm:P53_has_former_or_current_location ?location;
+               crm:P128_carries ?cho_inscription;
+               crm:P46_is_composed_of ?partsofcho.
+          ?cho_image crm:P70_documents ?cho;
+                     a crm:E31_Document.
+          ?cho_1476Title rdfs:label ?choTitle;
+                         a crm:E35_Title .
+          ?choispartof crm:P46_is_composed_of ?cho.
+          ?location a crm:E53_Place.
+          ?location rdfs:label ?locationLabel.
+          ?cho_inscription crm:P190_has_symbolic_content ?inscription.
+          ?cho_inscription a crm:E90_Symbolic_Object.
+          ?class a crm:E55_Type;
+                 rdfs:label ?classLabel.
+          ?choProductionEventRole a bioc:Thing_Role .
+          ?choProductionEvent bioc:occured_in_the_presence_of_in_role ?choProductionEventRole.
+          ?choProductionEvent a crm:E12_Production.
+          ?choProductionEvent crm:P4_has_time-span ?choProductionTimespan.
+          ?choProductionTimespan rdfs:label ?pInception.
+          ?choProductionEvent crm:P7_took_place_at ?locationofcreation.
+          ?locationofcreation a crm:E53_Place;
+                              rdfs:label ?locationofcreationLabel.
+          ?cho_material rdfs:label ?materialLabel.
+          ?depictedSubject rdfs:label ?dsubjectLabel;
+                           crm:P2_has_type ?dsubjectclass.
+          ?mainsubject rdfs:label ?mainsubjectLabel.
+          ?cho_measurement_event a crm:E16_Measurement.
+          ?cho_measurement_event crm:P39_measured ?cho;
+                                 crm:P40_observed_dimension ?cho_dimension_height,
+                                                            ?cho_dimension_width.
+         ?cho_dimension_height a crm:E54_Dimension;
+                        crm:P91_has_unit ?qunit;
+                        rdfs:label ?heightvalue;
+                        crm:P2_has_type wd:Q208826.
+         ?cho_dimension_width a crm:E54_Dimension;
+                        crm:P91_has_unit ?qunit;
+                        crm:P2_has_type wd:Q35059;
+                        rdfs:label ?widthtvalue.
+         ?qunit a crm:E58_Measurement_Unit.
+         ?collection a crm:E78_Curated_Holding;
+                     crm:P46_is_composed_of ?cho;
+                     rdfs:label ?collectionLabel.
+         ?chosignificantevent a crm:E5_Event.
+         ?chosignificantevent crm:P12_occurred_in_the_presence_of ?cho.
+        }
+}
+WHERE
+{
+  {
+      SELECT ?artist ?cho ?choLabel ?choProductionEvent ?choProductionEventRole ?choTitle ?cho_1476Title ?depictedSubject ?dsubjectLabel ?cho_measurement_event ?class ?classLabel ?chordfsLabel ?description ?cho_material ?choProductionTimespan ?materialLabel ?collectionLabel ?collection ?qunit ?cho_dimension_height ?cho_dimension_width ?widthtvalue ?heightvalue ?mainsubjectLabel ?mainsubjectclass ?locationofcreation ?locationofcreationLabel ?pInception ?cho_inscription ?inscription ?cho_image
+                     {
+                       {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
+                                                   ?artist rdfs:label ?artistLabel1 .
+                                                   ?artist owl:sameAs ?artistUri .
+                                                   FILTER(contains(str(?artistUri), "wikidata.org"))}
+                                       ORDER BY ?artist
+                          			   LIMIT 500
+                       }
+                       SERVICE <https://query.wikidata.org/sparql>
+                               {
+                                 ?cho wdt:P170 ?artistUri .
+                                 OPTIONAL{?cho wdt:P18 ?cho_image.}
+                                 OPTIONAL{?cho wdt:P31 ?class
+                                               OPTIONAL{?class rdfs:label ?classLabel
+                                                               FILTER(lang(?classLabel) =  "en" || "nl" || "sl" || "de" || "fi")}}}
+                                 OPTIONAL{?cho wdt:P1476 ?choTitle}
+                                 OPTIONAL{?cho rdfs:label ?chordfsLabel
+                                            FILTER(lang(?chordfsLabel) = "en" || "nl" || "sl" || "de" || "fi")}
+                                 OPTIONAL{?cho schema:description ?description
+                                            FILTER(lang(?description) =  "en" || "nl" || "sl" || "de" || "fi")}
+                                 OPTIONAL{?cho wdt:P186 ?material
+                                         OPTIONAL{?material rdfs:label ?materialLabel
+                                                                FILTER(lang(?materialLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}}
+                                 OPTIONAL{?cho wdt:P921 ?mainsubject.
+                                          OPTIONAL{?mainsubject wdt:P31 ?mainsubjectclass}
+                                          OPTIONAL{?mainsubject rdfs:label ?mainsubjectLabel
+                                                                FILTER(lang(?mainsubjectLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}
+                                         }
+                                 OPTIONAL{?cho wdt:P180 ?depictedSubject.
+                                          OPTIONAL{?depictedSubject wdt:P31 ?dsubjectclass}
+                                          OPTIONAL{?depictedSubject rdfs:label ?dsubjectLabel
+                                                                    FILTER(lang(?dsubjectLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}}
+                                 OPTIONAL{?cho wdt:P276 ?location.
+                                          OPTIONAL{?location rdfs:label ?locationLabel
+                                                             FILTER(lang(?locationLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}}
+                                 OPTIONAL{?cho wdt:P1684 ?inscription}
+                                 OPTIONAL{?cho wdt:P2048 ?heightvalue}
+                                 OPTIONAL{?cho p:P2048 ?heightstatement.
+                                          OPTIONAL{?heightstatement psn:P2048 ?quantityvaluestmt}
+                                          OPTIONAL{?quantityvaluestmt wikibase:quantityUnit ?qunit}
+                                          }
+                                 OPTIONAL{?cho wdt:P2049 ?widthvalue}
+                                 OPTIONAL{?cho wdt:P195 ?collection
+                                         OPTIONAL{?collection rdfs:label ?collectionLabel
+                                                                FILTER(lang(?collectionLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}}}}
+                                 OPTIONAL{?cho wdt:P527 ?partsofcho}
+                                 OPTIONAL{?cho wdt:P361 ?choispartof}
+                                 OPTIONAL{?cho wdt:P1071 ?locationofcreation
+                                          OPTIONAL{?locationofcreation rdfs:label ?locationofcreationLabel
+                                                                FILTER(lang(?locationofcreationLabel) =  "en" || "nl" || "sl" || "de"|| "fi")}}
+                                 #significant events have to be checked for relevance, if the relevance is given, details about the events should be added
+                                 OPTIONAL{?cho wdt:P739 ?chosignificantevent}
+                                 OPTIONAL{?artistURI wdt:P739 ?artistsignificantevent}
+                                 OPTIONAL{?cho wdt:P973 ?chodescribedat}
+                                 OPTIONAL{?artistURI wdt:P973 ?artistdescribedat}
+                                 OPTIONAL{?cho wdt:P571 ?pInception}
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
+                                 BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chomeasurement/") as ?cho_MeasurementEventStr)
+                                 BIND(IRI(?cho_MeasurementEventStr) as ?cho_measurement_event)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chodimensionheight/") as ?cho_heightDimensionStr)
+                                 BIND(IRI(?cho_heightDimensionStr) as ?cho_dimension_height)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chodimensionwidth/") as ?cho_widthDimensionStr)
+                                 BIND(IRI(?cho_widthDimensionStr) as ?cho_dimension_width)
+                                 BIND(REPLACE(STR(?material), "http://www.wikidata.org/entity/", "https://www.intavia.org/chomaterial/") as ?cho_materialStr)
+                                 BIND(IRI(?cho_materialStr) as ?cho_material)
+                                 BIND(REPLACE(STR(?class), "http://www.wikidata.org/entity/", "https://www.intavia.org/cho_instanceofclass/") as ?cho_instanceofclassStr)
+                                 BIND(IRI(?cho_instanceofclassStr) as ?cho_instanceofclass)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/productionthingrole/") as ?choProductionEventRoleStr)      
+                                 BIND(IRI(?choProductionEventRoleStr) as ?choProductionEventRole)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/production_event/") as ?choProductionEventStr)      
+                                 BIND(IRI(?choProductionEventStr) as ?choProductionEvent)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/timespan_production/") as ?choProductionTimespanStr)      
+                                 BIND(IRI(?choProductionTimespanStr) as ?choProductionTimespan)
+                                 BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/inscription/") as ?inscriptionObjectStr)
+                                 BIND(IRI(?inscriptionObjectStr) as ?cho_inscription)
+                                 }
