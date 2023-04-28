@@ -56,6 +56,7 @@ def create_time_span_tripels(kind, event_node, obj, g):
         elif kind == "end":
             g.add((event_node, crm.P82b_end_of_the_end, (Literal(
                 f"{obj[f'{kind}_date']}T23:59:59", datatype=XSD.dateTime))))
+    g.add((event_node, RDF.type, crm["E52_Time-Span"]))
     return g
 
 
@@ -73,26 +74,24 @@ def render_personplace_relation(rel, g, base_uri):
     place_uri = URIRef(f"{idmapis}place/{rel['related_place']['id']}")
     if rel['relation_type']['id'] == 595:
         # define serialization for "person born in place relations"
-        if (place_uri, None, None) not in g:
-            pass
-            # await render_place(rel['related_place']['id'], g)
         g.add(
             (URIRef(f"{idmapis}birthevent/{rel['related_person']['id']}"), crm.P7_took_place_at, place_uri))
+        rel_rendered = True
     elif rel['relation_type']['id'] == 596:
         # define serialization for "person born in place relations"
-        if (place_uri, None, None) not in g:
-            pass
-            # await render_place(rel['related_place']['id'], g)
         g.add(
             (URIRef(f"{idmapis}deathevent/{rel['related_person']['id']}"), crm.P7_took_place_at, place_uri))
+        rel_rendered = True
     else:
         event_uri = URIRef(f"{idmapis}event/personplace/{rel['id']}")
         if (event_uri, None, None) not in g:
             g = render_event(rel, 'personplace', event_uri, g)
-        if (place_uri, None, None) not in g and rel["related_place"]["id"] not in glob_list_entities["places"]:
-            place = rel['related_place']['id']
-            glob_list_entities["places"].append(rel["related_place"]["id"])
         g.add((event_uri, crm.P7_took_place_at, place_uri))
+        rel_rendered = True
+
+    if rel_rendered and (place_uri, None, None) not in g and rel["related_place"]["id"] not in glob_list_entities["places"]:
+        place = rel['related_place']['id']
+        glob_list_entities["places"].append(rel["related_place"]["id"])
     return place
 
 
@@ -107,6 +106,15 @@ def render_personperson_relation(rel, g):
     """
     # prepare nodes
     logger = prefect.context.get("logger")
+    family_relations = [
+        5870,  # war Bruder von
+        5871,  # war Schwester von
+        5741,  # family member
+        5414,  # war Kind von
+        5413,  # war Elternteil von
+        5412,  # war verwandt
+        5411,  # war verheiratet
+    ]
     if isinstance(rel, list):
         if len(rel) == 0:
             return SKIP(message="No person-person relations found skipping")
@@ -114,12 +122,15 @@ def render_personperson_relation(rel, g):
     pers_uri = URIRef(f"{idmapis}personproxy/{rel['related_personA']['id']}")
     n_rel_type = URIRef(f"{idmapis}personrelation/{rel['id']}")
     n_relationtype = URIRef(f"{idmrelations}{rel['relation_type']['id']}")
-    g.add((pers_uri, bioc.has_person_relation, n_rel_type))
+    if rel["relation_type"]["id"] in family_relations:
+        g.add((pers_uri, bioc.has_family_relation, n_rel_type))
+    else:
+        g.add((pers_uri, bioc.has_person_relation, n_rel_type))
     g.add((n_rel_type, RDF.type, n_relationtype))
     g.add((n_rel_type, RDFS.label, Literal(
         f"{rel['relation_type']['label']}")))
     g.add((URIRef(
-        f"{idmapis}personproxy/{rel['related_personB']['id']}"), bioc.inheres_in, n_rel_type))
+        f"{idmapis}personproxy/{rel['related_personB']['id']}"), bioc.bearer_of, n_rel_type))
     if rel['related_personB']['id'] not in glob_list_entities["persons"]:
         glob_list_entities["persons"].append(rel["related_personB"]["id"])
         person = rel['related_personB']['id']
@@ -131,10 +142,19 @@ def render_personperson_relation(rel, g):
             if rel['relation_type']['parent_id'] is not None:
                 g.add((n_relationtype, RDFS.subClassOf, URIRef(
                     f"{idmrelations}{rel['relation_type']['parent_id']}")))
-                g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
-                    bioc.Person_Relationship_Role)))
+                if rel["relation_type"]["id"] in family_relations:
+                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
+                        bioc.Family_Relationship_Role)))
+                else:
+                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
+                        bioc.Person_Relationship_Role)))
     else:
-        g.add((n_relationtype, RDFS.subClassOf, bioc.Person_Relationship_Role))
+        if rel["relation_type"]["id"] in family_relations:
+            g.add((n_relationtype, RDFS.subClassOf, URIRef(
+                bioc.Family_Relationship_Role)))
+        else:
+            g.add((n_relationtype, RDFS.subClassOf, URIRef(
+                bioc.Person_Relationship_Role)))
     logger.info(
         f" personpersonrelation serialized for: {rel['related_personA']['id']}")
     # return g
@@ -245,8 +265,9 @@ def render_personinstitution_relation(rel: dict, g: Graph) -> list:
             inst = rel['related_institution']['id']
             glob_list_entities["institutions"].append(
                 rel['related_institution']['id'])
-    g.add((URIRef(f"{idmapis}career/{rel['id']}"), URIRef(
-        f"{crm}P4_has_time-span"), URIRef(f"{idmapis}career/timespan/{rel['id']}")))
+    if rel["start_date"] is not None or rel["end_date"] is not None:
+        g.add((URIRef(f"{idmapis}career/{rel['id']}"), URIRef(
+            f"{crm}P4_has_time-span"), URIRef(f"{idmapis}career/timespan/{rel['id']}")))
     for rel_plcs in g.objects(URIRef(f"{idmapis}groupproxy/{rel['related_institution']['id']}"), crm.P74_has_current_or_former_residence):
         g.add(
             (URIRef(f"{idmapis}career/{rel['id']}"), crm.P7_took_place_at, rel_plcs))
@@ -396,7 +417,7 @@ def render_person(person, g, base_uri):
     return g
 
 
-@ task()
+@task()
 def render_organizationplace_relation(rel, g):
     place = None
     node_org = URIRef(
@@ -409,7 +430,7 @@ def render_organizationplace_relation(rel, g):
     return place
 
 
-@ task()
+@task()
 def render_organization(organization, g, base_uri):
     """renders organization object as RDF graph
 
@@ -521,7 +542,7 @@ def render_event(event, event_type, node_event, g):
     return g
 
 
-@ task()
+@task()
 def render_place(place, g, base_uri):
     """renders place object as RDF graph
 
@@ -570,8 +591,8 @@ def render_place(place, g, base_uri):
     return g
 
 
-@ task(max_retries=2, retry_delay=timedelta(minutes=1))
-def get_persons(base_uri, filter_params):
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def get_persons(base_uri, filter_params, max_entities):
     """gets persons from API
 
     Args:
@@ -596,6 +617,10 @@ def get_persons(base_uri, filter_params):
     else:
         logger.info(f"Got persons {next_url}")
     res = res.json()
+    if max_entities is None:
+        max_entities = res['count']
+    if max_entities < len(res_fin):
+        return res_fin
     res_fin.extend(res["results"])
     if res["next"] is not None:
         raise LOOP(message=f"offset {res['offset']}", result={
@@ -603,7 +628,7 @@ def get_persons(base_uri, filter_params):
     return res_fin
 
 
-@ task(max_retries=2, retry_delay=timedelta(minutes=1))
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
 def get_entity(entity_id, entity_type, base_uri):
     """gets organization object from API
 
@@ -625,7 +650,7 @@ def get_entity(entity_id, entity_type, base_uri):
         return res.json()
 
 
-@ task(max_retries=2, retry_delay=timedelta(minutes=1))
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
 def get_entity_relations(base_uri, entity, kind, related_entity_type):
     """gets entity relations from API
 
@@ -659,7 +684,7 @@ def get_entity_relations(base_uri, entity, kind, related_entity_type):
     return res_full
 
 
-@ task()
+@task()
 def create_base_graph(base_uri):
     global crm
     crm = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
@@ -792,7 +817,7 @@ with Flow("Create RDF from APIS API") as flow:
     storage_path = Parameter(
         "Storage Path", default="/archive/serializations/APIS")
     g = create_base_graph(base_uri_serialization)
-    persons = get_persons(endpoint, filter_params)
+    persons = get_persons(endpoint, filter_params, max_entities)
     person_return = render_person.map(persons, unmapped(
         g), unmapped(base_uri_serialization))
     pers_inst = get_entity_relations.map(unmapped(endpoint),
@@ -805,7 +830,7 @@ with Flow("Create RDF from APIS API") as flow:
     pers_pers = get_entity_relations.map(
         unmapped(endpoint), persons, kind=unmapped('personperson'), related_entity_type=unmapped("person"))
     additional_persons = render_personperson_relation.map(
-        pers_pers, unmapped(g))
+        flatten(pers_pers), unmapped(g))
     additional_persons_filtered = filter_results(additional_persons)
     additional_persons_data = get_entity.map(
         additional_persons_filtered, unmapped('person'), unmapped(endpoint))
@@ -834,9 +859,7 @@ with Flow("Create RDF from APIS API") as flow:
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     upload_data(out, named_graph, upstream_tasks=[out])
-# state = flow.run(executor=LocalExecutor(), parameters={
-#     'Filter Parameters': {"collection": 86}, 'Storage Path': '/workspaces/prefect-flows'})
-flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", },
-                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
-flow.storage = GitHub(repo="InTaVia/prefect-flows",
-                      path="create_apis_graph_v1.py")
+state = flow.run(executor=LocalExecutor(), parameters={
+    'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 27118}, 'Storage Path': '/workspaces/prefect-flows'})  # flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", }, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+# flow.storage = GitHub(repo="InTaVia/prefect-flows",
+#                       path="create_apis_graph_v1.py")
