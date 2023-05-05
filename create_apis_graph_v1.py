@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import shutil
+import git
 import prefect
 from prefect.storage import GitHub
 from prefect.run_configs import KubernetesRun
@@ -786,6 +788,26 @@ filter_results = FilterTask(
 )
 
 
+@task()
+def push_data_to_repo(file_path):
+    full_local_path = os.path.join(os.getcwd(), "source-data")
+    username = os.environ.get("GITHUB_USERNAME")
+    password = os.environ.get("GITHUB_PASSWORD")
+    remote = f"https://{username}:{password}@github.com/intavia/source-data.git"
+    repo = git.Repo.clone_from(remote, full_local_path)
+    branch = f'feat/update-apis-data-{datetime.now().strftime("%d-%m-%Y")}'
+    repo.git.checkout(
+        '-b', branch)
+    os.makedirs(os.path.dirname(os.path.join(
+        full_local_path, "datasets", "apis_data.ttl")), exist_ok=True)
+    shutil.copyfile(file_path, os.path.join(
+        full_local_path, "datasets", "apis_data.ttl"))
+    repo.git.add("datasets/apis_data.ttl")
+    repo.index.commit("feat: adds latest serialization of APIS data")
+    origin = repo.remote(name="origin")
+    origin.push(refspec=f"{branch}:{branch}")
+
+
 @ task
 def upload_data(f_path, named_graph, sparql_endpoint=None):
     logger = prefect.context.get("logger")
@@ -858,8 +880,11 @@ with Flow("Create RDF from APIS API") as flow:
     places_out_filtered = filter_results(places_out)
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
-    upload_data(out, named_graph, upstream_tasks=[out])
-state = flow.run(executor=LocalExecutor(), parameters={
-    'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 27118}, 'Storage Path': '/workspaces/prefect-flows'})  # flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib", }, job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
-# flow.storage = GitHub(repo="InTaVia/prefect-flows",
-#                       path="create_apis_graph_v1.py")
+    # upload_data(out, named_graph, upstream_tasks=[out])
+    push_data_to_repo(out)
+# state = flow.run(executor=LocalExecutor(), parameters={
+#     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 27118}, 'Storage Path': '/workspaces/prefect-flows'})  #
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
+                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+flow.storage = GitHub(repo="InTaVia/prefect-flows",
+                      path="create_apis_graph_v1.py")

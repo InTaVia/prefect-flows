@@ -16,6 +16,7 @@ pprint36 = "^3.9.0"
 urllib3 = "^1.26.8"
 prefect = {extras = ["kubernetes"], git = "https://github.com/acdh-oeaw/prefect", branch="1.x"}
 owlrl = "^6.0.2"
+gitpython = "^3.1.31"
 
 [tool.poetry.dev-dependencies]
 
