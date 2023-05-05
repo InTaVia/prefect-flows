@@ -885,6 +885,6 @@ with Flow("Create RDF from APIS API") as flow:
 # state = flow.run(executor=LocalExecutor(), parameters={
 #     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 27118}, 'Storage Path': '/workspaces/prefect-flows'})  #
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
-                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
+                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
                       path="create_apis_graph_v1.py")
