@@ -150,6 +150,14 @@ def render_personperson_relation(rel, g):
                 else:
                     g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
                         bioc.Person_Relationship_Role)))
+            else:
+                if rel["relation_type"]["id"] in family_relations:
+                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
+                        bioc.Family_Relationship_Role)))
+                else:
+                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
+                        bioc.Person_Relationship_Role)))
+
     else:
         if rel["relation_type"]["id"] in family_relations:
             g.add((n_relationtype, RDFS.subClassOf, URIRef(
@@ -881,10 +889,10 @@ with Flow("Create RDF from APIS API") as flow:
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     # upload_data(out, named_graph, upstream_tasks=[out])
-    push_data_to_repo(out)
-# state = flow.run(executor=LocalExecutor(), parameters={
-#     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 27118}, 'Storage Path': '/workspaces/prefect-flows'})  #
-flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
-                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
-flow.storage = GitHub(repo="InTaVia/prefect-flows",
-                      path="create_apis_graph_v1.py")
+    # push_data_to_repo(out)
+state = flow.run(executor=LocalExecutor(), parameters={
+    'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 28276}, 'Storage Path': '/workspaces/prefect-flows'})  #
+# flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
+#                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
+# flow.storage = GitHub(repo="InTaVia/prefect-flows",
+#                       path="create_apis_graph_v1.py")
