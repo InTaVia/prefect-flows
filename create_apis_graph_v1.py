@@ -433,7 +433,13 @@ def render_organizationplace_relation(rel, g):
     node_org = URIRef(
         f"{idmapis}groupproxy/{rel['related_institution']['id']}")
     if (URIRef(f"{idmapis}place/{rel['related_place']['id']}"), None, None) not in g and rel['related_place']['id'] not in glob_list_entities["places"]:
-        place = rel['related_place']['id']
+        place = rel['related_place']['id'Create a branch for this issue
+                                     Branch name
+                                     ￼
+                                     Repository destination
+                                     ￼Change branch source
+                                     InTaVia/prefect-flows
+                                     ]
         glob_list_entities["places"].append(place)
     g.add(
         (node_org, crm.P74_has_current_or_former_residence, URIRef(f"{idmapis}place/{rel['related_place']['id']}")))
@@ -818,7 +824,13 @@ def push_data_to_repo(file_path):
 
 @ task
 def upload_data(f_path, named_graph, sparql_endpoint=None):
-    logger = prefect.context.get("logger")
+    logger = prefect.context.get("logger"Create a branch for this issue
+                                 Branch name
+                                 ￼
+                                 Repository destination
+                                 ￼Change branch source
+                                 InTaVia/prefect-flows
+                                 )
     data = open(f_path, 'rb').read()
     headers = {
         "Content-Type": "application/x-turtle",
@@ -889,10 +901,10 @@ with Flow("Create RDF from APIS API") as flow:
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     # upload_data(out, named_graph, upstream_tasks=[out])
-    # push_data_to_repo(out)
-state = flow.run(executor=LocalExecutor(), parameters={
-    'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 28276}, 'Storage Path': '/workspaces/prefect-flows'})  #
-# flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
-#                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
-# flow.storage = GitHub(repo="InTaVia/prefect-flows",
-#                       path="create_apis_graph_v1.py")
+    push_data_to_repo(out)
+# state = flow.run(executor=LocalExecutor(), parameters={
+#     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 28276}, 'Storage Path': '/workspaces/prefect-flows'})  #
+flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
+                                job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
+flow.storage = GitHub(repo="InTaVia/prefect-flows",
+                      path="create_apis_graph_v1.py")
