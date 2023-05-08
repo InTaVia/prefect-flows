@@ -433,13 +433,7 @@ def render_organizationplace_relation(rel, g):
     node_org = URIRef(
         f"{idmapis}groupproxy/{rel['related_institution']['id']}")
     if (URIRef(f"{idmapis}place/{rel['related_place']['id']}"), None, None) not in g and rel['related_place']['id'] not in glob_list_entities["places"]:
-        place = rel['related_place']['id'Create a branch for this issue
-                                     Branch name
-                                     ￼
-                                     Repository destination
-                                     ￼Change branch source
-                                     InTaVia/prefect-flows
-                                     ]
+        place = rel['related_place']['id']
         glob_list_entities["places"].append(place)
     g.add(
         (node_org, crm.P74_has_current_or_former_residence, URIRef(f"{idmapis}place/{rel['related_place']['id']}")))
@@ -803,15 +797,18 @@ filter_results = FilterTask(
 
 
 @task()
-def push_data_to_repo(file_path):
+def push_data_to_repo(file_path, branch=None):
     full_local_path = os.path.join(os.getcwd(), "source-data")
     username = os.environ.get("GITHUB_USERNAME")
     password = os.environ.get("GITHUB_PASSWORD")
     remote = f"https://{username}:{password}@github.com/intavia/source-data.git"
     repo = git.Repo.clone_from(remote, full_local_path)
-    branch = f'feat/update-apis-data-{datetime.now().strftime("%d-%m-%Y")}'
-    repo.git.checkout(
-        '-b', branch)
+    if branch is None:
+        branch = f'feat/update-apis-data-{datetime.now().strftime("%d-%m-%Y")}'
+        repo.git.checkout(
+            '-b', branch)
+    else:
+        repo.git.checkout(branch)
     os.makedirs(os.path.dirname(os.path.join(
         full_local_path, "datasets", "apis_data.ttl")), exist_ok=True)
     shutil.copyfile(file_path, os.path.join(
@@ -824,13 +821,7 @@ def push_data_to_repo(file_path):
 
 @ task
 def upload_data(f_path, named_graph, sparql_endpoint=None):
-    logger = prefect.context.get("logger"Create a branch for this issue
-                                 Branch name
-                                 ￼
-                                 Repository destination
-                                 ￼Change branch source
-                                 InTaVia/prefect-flows
-                                 )
+    logger = prefect.context.get("logger")
     data = open(f_path, 'rb').read()
     headers = {
         "Content-Type": "application/x-turtle",
@@ -858,6 +849,7 @@ with Flow("Create RDF from APIS API") as flow:
     filter_params = Parameter("Filter Parameters", default={"collection": 86})
     storage_path = Parameter(
         "Storage Path", default="/archive/serializations/APIS")
+    branch = Parameter("GIT branch to use for pushing", default=None)
     g = create_base_graph(base_uri_serialization)
     persons = get_persons(endpoint, filter_params, max_entities)
     person_return = render_person.map(persons, unmapped(
@@ -901,7 +893,7 @@ with Flow("Create RDF from APIS API") as flow:
     out = serialize_graph(
         g, storage_path, named_graph, upstream_tasks=[places_out_filtered])
     # upload_data(out, named_graph, upstream_tasks=[out])
-    push_data_to_repo(out)
+    push_data_to_repo(out, branch)
 # state = flow.run(executor=LocalExecutor(), parameters={
 #     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 28276}, 'Storage Path': '/workspaces/prefect-flows'})  #
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
