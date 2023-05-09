@@ -120,6 +120,8 @@ def render_personperson_relation(rel, g):
     if isinstance(rel, list):
         if len(rel) == 0:
             return SKIP(message="No person-person relations found skipping")
+    if rel['relation_type']['label'] == "undefined":
+        return SKIP(message="Relation type is undefined, skipping")
     person = None
     pers_uri = URIRef(f"{idmapis}personproxy/{rel['related_personA']['id']}")
     n_rel_type = URIRef(f"{idmapis}personrelation/{rel['id']}")
@@ -140,23 +142,22 @@ def render_personperson_relation(rel, g):
     #    f"{idmapis}personproxy/{rel['related_personB']['id']}")))
     # TODO: add hiarachy of person relations
     if rel['relation_type'] is not None:
-        if rel['relation_type']['label'] != "undefined":
-            if rel['relation_type']['parent_id'] is not None:
-                g.add((n_relationtype, RDFS.subClassOf, URIRef(
-                    f"{idmrelations}{rel['relation_type']['parent_id']}")))
-                if rel["relation_type"]["id"] in family_relations:
-                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
-                        bioc.Family_Relationship_Role)))
-                else:
-                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
-                        bioc.Person_Relationship_Role)))
+        if rel['relation_type']['parent_id'] is not None:
+            g.add((n_relationtype, RDFS.subClassOf, URIRef(
+                f"{idmrelations}{rel['relation_type']['parent_id']}")))
+            if rel["relation_type"]["id"] in family_relations:
+                g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
+                    bioc.Family_Relationship_Role)))
             else:
-                if rel["relation_type"]["id"] in family_relations:
-                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
-                        bioc.Family_Relationship_Role)))
-                else:
-                    g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
-                        bioc.Person_Relationship_Role)))
+                g.add((URIRef(f"{idmrelations}{rel['relation_type']['parent_id']}"), RDFS.subClassOf, URIRef(
+                    bioc.Person_Relationship_Role)))
+        else:
+            if rel["relation_type"]["id"] in family_relations:
+                g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
+                    bioc.Family_Relationship_Role)))
+            else:
+                g.add((URIRef(f"{idmrelations}{rel['relation_type']['id']}"), RDFS.subClassOf, URIRef(
+                    bioc.Person_Relationship_Role)))
 
     else:
         if rel["relation_type"]["id"] in family_relations:
@@ -475,10 +476,11 @@ def render_organization(organization, g, base_uri):
             # print(row['institution_name'], ':', row['institution_start_date'], row['institution_end_date'], row['institution_start_date_written'], row['institution_end_date_written'])
             g.add((start_date_node, RDF.type, crm.E63_Beginning_of_Existence))
             g.add((start_date_node, crm.P92_brought_into_existence, node_org))
-            g.add((start_date_node, URIRef(
-                crm + "P4_has_time-span"), start_date_time_span))
-            g = create_time_span_tripels(
-                'start', start_date_time_span, organization, g)
+            if organization["start_date"] is not None:
+                g.add((start_date_node, URIRef(
+                    crm + "P4_has_time-span"), start_date_time_span))
+                g = create_time_span_tripels(
+                    'start', start_date_time_span, organization, g)
             # if len(res['start_date_written']) == 4 and res['start_end_date'] is not None:
             #     # check whether only a year has bin given for the start date and add according nodes
             #     g.add((start_date_time_span, crm.P82a_begin_of_the_begin, (Literal(
@@ -498,9 +500,11 @@ def render_organization(organization, g, base_uri):
             # print(row['institution_name'], ':', row['institution_start_date'], row['institution_end_date'], row['institution_start_date_written'], row['institution_end_date_written'])
             g.add((end_date_node, RDF.type, crm.E64_End_of_Existence))
             g.add((end_date_node, crm.P93_took_out_of_existence, node_org))
-            g.add((end_date_node, URIRef(crm + "P4_has_time-span"), end_date_time_span))
-            g = create_time_span_tripels(
-                'end', end_date_time_span, organization, g)
+            if organization["end_date"] is not None:
+                g.add((end_date_node, URIRef(
+                    crm + "P4_has_time-span"), end_date_time_span))
+                g = create_time_span_tripels(
+                    'end', end_date_time_span, organization, g)
             # if len(res['end_date_written']) == 4 and res['end_end_date'] is not None:
             #     # check whether only a year has bin given for the start date and add according nodes
             #     g.add((end_date_time_span, crm.P82a_begin_of_the_begin, (Literal(
@@ -895,7 +899,7 @@ with Flow("Create RDF from APIS API") as flow:
     # upload_data(out, named_graph, upstream_tasks=[out])
     push_data_to_repo(out, branch)
 # state = flow.run(executor=LocalExecutor(), parameters={
-#     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 28276}, 'Storage Path': '/workspaces/prefect-flows'})  #
+#     'Max Entities': 50, 'Filter Parameters': {"collection": 86, "id": 79022}, 'Storage Path': '/workspaces/prefect-flows'})  #
 flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "requests rdflib gitpython", },
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml", image="ghcr.io/intavia/intavia-prefect-image:1.4.1")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
