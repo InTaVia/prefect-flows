@@ -40,13 +40,16 @@ INSERT {
           ?choProductionEvent bioc:had_participant_in_role ?producingArtistRole .
           ?artist bioc:bearer_of ?producingArtistRole .
           ?producingArtistRole a idmrole:producing_artist .
-          idmrole:producing_artist rdfs:label "producing artist"@en
+          idmrole:producing_artist rdfs:label "producing artist"@en .
+          ?class a crm:E55_Type;
+                 rdfs:label ?classLabel .
+          ?cho crm:P2_has_type ?class
         }
 }
 WHERE
 {
   {
-      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image      {
+      SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image ?class ?classLabel     {
                        {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
                                                    ?artist rdfs:label ?artistLabel1 .
                                                    ?artist owl:sameAs ?artistUri .
@@ -66,6 +69,9 @@ WHERE
                                           BIND(IRI(REPLACE(STR(?artistUri), "http://www.wikidata.org/entity", STR(idmrole:producing_artist))) as ?producingArtistRole)
                                           BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.org/chotitle/") as ?cho_TitleStr)
                                           BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
+                                 OPTIONAL{?cho wdt:P31 ?class
+                                          OPTIONAL{?class rdfs:label ?classLabel
+                                                   FILTER(lang(?classLabel) in  ("en", "nl", "sl", "de", "fi")}}
                                  OPTIONAL{?cho wdt:P1476 ?nativeLabel1 .
                                          }
                                   OPTIONAL{?cho wdt:P1705 ?nativeLabel4}
