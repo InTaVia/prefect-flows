@@ -71,7 +71,7 @@ WHERE
                                           BIND(IRI(?cho_TitleStr) as ?cho_1476Title)
                                  OPTIONAL{?cho wdt:P31 ?class
                                           OPTIONAL{?class rdfs:label ?classLabel
-                                                   FILTER(lang(?classLabel) in  ("en", "nl", "sl", "de", "fi")}}
+                                                   FILTER(lang(?classLabel) in  ("en", "nl", "sl", "de", "fi"))}}
                                  OPTIONAL{?cho wdt:P1476 ?nativeLabel1 .
                                          }
                                   OPTIONAL{?cho wdt:P1705 ?nativeLabel4}
