@@ -61,7 +61,7 @@ WHERE
                        }
                        SERVICE <https://query.wikidata.org/sparql>
                                {
-                               ?cho wdt:P170 ?artistUri .
+                               ?cho wdt:P170|wdt:P110|wdt:P162|wdt:P175|wdt:P86|wdt:P84|wdt:P50|wdt:P61 ?artistUri .
                                           BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/productionthingrole/") as ?choProductionEventRoleStr)      
                                           BIND(IRI(?choProductionEventRoleStr) as ?choProductionEventRole)
                                           BIND(REPLACE(STR(?cho), "http://www.wikidata.org/entity/", "https://www.intavia.eu/production_event/") as ?choProductionEventStr)      
