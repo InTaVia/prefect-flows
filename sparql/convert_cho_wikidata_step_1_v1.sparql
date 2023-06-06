@@ -51,7 +51,7 @@ WHERE
   {
       SELECT ?artist ?cho ?choProductionEvent ?choProductionEventRole ?choProductionTimespan ?locationofcreation ?pInception ?producingArtistRole ?cho_1476Title ?nativeLabel ?eventLabel ?cho_image ?class ?classLabel     {
                        {SELECT ?artist ?artistUri {?artist a crm:E21_Person .
-                                                   ?artist rdfs:label ?artistLabel1 .
+                                                   
                                                    ?artist owl:sameAs ?artistUri .
                                                    FILTER(contains(str(?artistUri), "wikidata.org"))}
                                        ORDER BY ?artist
