@@ -59,7 +59,7 @@ flow.run_config = KubernetesRun(job_template_path="/intavia-job-template.yaml")
 
 `poetry install`
 
-`poetry run SCRIPT.PY`
+`poetry run python SCRIPT.PY`
 
 #### person_id_linker
 
