@@ -215,7 +215,7 @@ def add_provenance(_, start_time, create_source_entities, create_target_entities
 with Flow("Generate provided entity graph") as flow:
     endpoint = Parameter(
         "endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql") # string
-    entity_source_uris = Parameter('entity_source_uris', default=['https://apis.acdh.oeaw.ac.at/data', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/place-id-enrichment'])  # list
+    entity_source_uris = Parameter('entity_source_uris', default=['https://apis.acdh.oeaw.ac.at/data', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/person-id-enrichment'])  # list
     entity_source_type = Parameter(
         "entity_source_type", default="http://www.cidoc-crm.org/cidoc-crm/E21_Person") # string
     entity_source_proxy_type = Parameter(
@@ -244,6 +244,9 @@ flow.run_config = KubernetesRun(env={"EXTRA_PIP_PACKAGES": "SPARQLWrapper rdflib
                                 job_template_path="https://raw.githubusercontent.com/InTaVia/prefect-flows/master/intavia-job-template.yaml")
 flow.storage = GitHub(repo="InTaVia/prefect-flows",
                       path="update_provided_entities.py")
+
+# default settings
+#flow.run()
 
 # Persons
 #flow.run(
