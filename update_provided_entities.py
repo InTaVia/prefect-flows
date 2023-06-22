@@ -229,7 +229,7 @@ with Flow("Generate provided entity graph") as flow:
     entity_proxy_for_property = Parameter(
         "entity_proxy_for_property", default="http://www.intavia.eu/idm-core/person_proxy_for") # string
     target_graph = Parameter(
-        'target_graph', default='http://www.intavia.org/graphs/provided_persons') # string
+        'target_graph', default='http://www.intavia.eu/graphs/provided_persons') # string
 
     start_time = get_start_time()
     sparql = setup_sparql_connection(endpoint)
