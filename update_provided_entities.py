@@ -12,7 +12,6 @@ import os
 from string import Template
 import datetime
 
-IDMCORE = Namespace("http://www.intavia.eu/idm-core/")
 IDM_PROV = Namespace("http://www.intavia.eu/idm-prov/")
 IDM_PREFECT = Namespace("http://www.intavia.eu/idm-prefect/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
@@ -74,6 +73,9 @@ def create_provided_entities_graph(sparql, id_graph, entity_enriched_uris, entit
   } 
   """
 
+    providedEntityTypeURI = URIRef(provided_entity_type)
+    entityProxyForPropertyURI = URIRef(entity_proxy_for_property)
+
     g = Graph()
 
     addedEntityProxies = set()
@@ -88,17 +90,17 @@ def create_provided_entities_graph(sparql, id_graph, entity_enriched_uris, entit
         entityProxy = URIRef(entityProxyURI)
         providedEntityURI = URIRef(
             provided_entity_ns + str(providedEntityCount))
-        g.add((providedEntityURI, RDF.type, provided_entity_type))
+        g.add((providedEntityURI, RDF.type, providedEntityTypeURI))
         # check for owl:sameAs links
         added = False
         for extID in id_graph.objects(entityProxy, OWL.sameAs):
             for otherProxy in id_graph.subjects(OWL.sameAs, extID):
                 if not otherProxy in addedEntityProxies:
-                    g.add((otherProxy, entity_proxy_for_property, providedEntityURI))
+                    g.add((otherProxy, entityProxyForPropertyURI, providedEntityURI))
                     addedEntityProxies.add(otherProxy)
                     added = True
         if not entityProxy in addedEntityProxies:
-            g.add((entityProxy, entity_proxy_for_property, providedEntityURI))
+            g.add((entityProxy, entityProxyForPropertyURI, providedEntityURI))
             addedEntityProxies.add(entityProxy)
             added = True
 
@@ -223,9 +225,9 @@ with Flow("Generate provided entity graph") as flow:
     provided_entity_ns = Parameter(
         "provided_entity_ns", default="http://www.intavia.eu/provided_person/") # string
     provided_entity_type = Parameter(
-        "provided_entity_type", default=IDMCORE.Provided_Person) # string
+        "provided_entity_type", default="http://www.intavia.eu/idm-core/Provided_Person") # string
     entity_proxy_for_property = Parameter(
-        "entity_proxy_for_property", default=IDMCORE.person_proxy_for) # string
+        "entity_proxy_for_property", default="http://www.intavia.eu/idm-core/person_proxy_for") # string
     target_graph = Parameter(
         'target_graph', default='http://www.intavia.org/graphs/provided_persons') # string
 
@@ -252,8 +254,8 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Person_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/person-id-enrichment",
 #    provided_entity_ns="http://www.intavia.eu/provided_person/",
-#    provided_entity_type=IDMCORE.Provided_Person,
-#    entity_proxy_for_property=IDMCORE.person_proxy_for,
+#    provided_entity_type="http://www.intavia.eu/idm-core/Provided_Person",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/person_proxy_for",
 #    target_graph='http://www.intavia.eu/graphs/provided_persons'
 #)
 
@@ -266,7 +268,7 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Place_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/place-id-enrichment",
 #    provided_entity_ns="http://www.intavia.eu/provided_place/",
-#    provided_entity_type=IDMCORE.Provided_Place,
-#    entity_proxy_for_property=IDMCORE.place_proxy_for,
+#    provided_entity_type="http://www.intavia.eu/idm-core/Provided_Place",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/place_proxy_for",
 #    target_graph='http://www.intavia.eu/graphs/provided_places'
 #)
