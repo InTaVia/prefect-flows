@@ -221,7 +221,7 @@ def update_target_graph(endpoint, target_uri, data):
     auth = HTTPBasicAuth(os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     post_url =  endpoint + '?context-uri=' + target_uri + ''
     res = requests.delete(delete_url, auth=auth)
-    res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=data.serialize(), auth=auth)
+    res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=data.serialize().encode('utf-8'), auth=auth)
     logger.info(res)
     logger.info(res2)
     logger.info(len(data))
@@ -307,7 +307,7 @@ def add_provenance(_, start_time, create_source_entities, create_target_entities
     
     auth = HTTPBasicAuth(os.environ.get("RDFDB_USER"), os.environ.get("RDFDB_PASSWORD"))
     post_url =  endpoint + '?context-uri=' + PROV_TARGET_GRAPH + ''
-    res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=g.serialize(), auth=auth)
+    res2 = requests.post(post_url, headers={'Content-type': 'text/turtle'}, data=g.serialize().encode('utf-8'), auth=auth)
 
 
  
@@ -351,7 +351,8 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 
 # Persons
 #flow.run(
-#    endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
 #    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/person-id-enrichment'],
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E21_Person",
@@ -365,7 +366,8 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 
 # Places
 #flow.run(
-#    endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
 #    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/place-id-enrichment'],
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E53_Place",
