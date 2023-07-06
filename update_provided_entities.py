@@ -44,6 +44,7 @@ def get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity
        a ?class .
   }
   """
+    logger.info(loadQuery)
 
     sparql.setQuery(loadQuery)
     results = sparql.queryAndConvert()
