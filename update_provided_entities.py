@@ -45,6 +45,10 @@ def get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity
   }
   """
     logger.info(loadQuery)
+    sparql = SPARQLWrapper(endpoint)
+    sparql.setHTTPAuth("BASIC")
+    sparql.setCredentials(user=os.environ.get(
+        "RDFDB_USER"), passwd=os.environ.get("RDFDB_PASSWORD"))
 
     sparql.setQuery(loadQuery)
     results = sparql.queryAndConvert()
