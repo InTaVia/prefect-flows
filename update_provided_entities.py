@@ -27,11 +27,11 @@ def setup_sparql_connection(endpoint):
 
 
 @task
-def get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity_source_proxy_type):
+def get_sameas_statements(sparql, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type):
     logger = prefect.context.get('logger')
 
     from_part = '\n'.join(
-        list(map(lambda x: 'from <' + x + '>', entity_source_uris)))
+        list(map(lambda x: 'from <' + x + '>', entity_source_uris + [entity_linker_graph])))
     loadQuery = """  
   PREFIX owl: <http://www.w3.org/2002/07/owl#> 
   CONSTRUCT {
@@ -61,11 +61,11 @@ def get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity
 
 # get provided entities that already exist in source data (with entity proxies of which none has sameAs links to external sources)
 @task
-def get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, provided_entity_type, entity_proxy_for_property):
+def get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, entity_linker_graph, provided_entity_type, entity_proxy_for_property):
     logger = prefect.context.get('logger')
 
     from_part = '\n'.join(
-        list(map(lambda x: 'from <' + x + '>', entity_source_uris)))
+        list(map(lambda x: 'from <' + x + '>', entity_source_uris + [entity_linker_graph])))
     entityQuery = """
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     SELECT *
@@ -76,9 +76,13 @@ def get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_u
       FILTER NOT EXISTS {
         ?proxy2 <""" + entity_proxy_for_property + """> ?provided ;
                 owl:sameAs ?ext_id .
+        GRAPH <""" + entity_linker_graph + """> {
+          ?proxy3 owl:sameAs ?ext_id .
+        }
       }
     }
     """
+    logger.info(entityQuery)
 
     sparql.setQuery(entityQuery)
     sparql.setReturnFormat(JSON)
@@ -98,26 +102,30 @@ def get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_u
 
 # get entity proxies that don't have sameAs links to external sources (and aren't connected to existing provided entities in source data)
 @task
-def get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_source_type, entity_source_proxy_type, entity_proxy_for_property):
+def get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type, entity_proxy_for_property):
     logger = prefect.context.get('logger')
 
     from_part = '\n'.join(
-        list(map(lambda x: 'from <' + x + '>', entity_source_uris)))
+        list(map(lambda x: 'from <' + x + '>', entity_source_uris + [entity_linker_graph])))
     entityQuery = """
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     SELECT DISTINCT ?entity
     """ + from_part + """
     WHERE {
-    VALUES ?class {<""" + entity_source_type + """> <""" + entity_source_proxy_type + """>}
-    ?entity a ?class .
-    FILTER NOT EXISTS {
+      VALUES ?class {<""" + entity_source_type + """> <""" + entity_source_proxy_type + """>}
+      ?entity a ?class .
+      FILTER NOT EXISTS {
         ?entity <""" + entity_proxy_for_property + """> ?provided ;
-    }
-    FILTER NOT EXISTS {
+      }
+      FILTER NOT EXISTS {
         ?entity owl:sameAs ?ext_id .
-    }
+        GRAPH <""" + entity_linker_graph + """> {
+          ?entity2 owl:sameAs ?ext_id .
+        }
+      }
     }
     """
+    logger.info(entityQuery)
 
     sparql.setQuery(entityQuery)
     sparql.setReturnFormat(JSON)
@@ -208,7 +216,7 @@ def create_provided_entities_graph(sparql, id_graph, entity_enriched_uris, entit
     logger.info('Number of provided entities created (incl. for non-mapped proxies without existing ones): ' +
                 str(providedEntityCount))
 
-    # g.serialize(destination="providedEntities.ttl")
+    #g.serialize(destination="providedEntities.ttl")
 
     logger.info('Entity provided updated')
     return g
@@ -315,7 +323,9 @@ def add_provenance(_, start_time, create_source_entities, create_target_entities
 with Flow("Generate provided entity graph") as flow:
     endpoint = Parameter(
         "endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql") # string
-    entity_source_uris = Parameter('entity_source_uris', default=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/person-id-enrichment'])  # list
+    entity_source_uris = Parameter('entity_source_uris', default=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'])  # list
+    entity_linker_graph = Parameter(
+        "entity_linker_graph", default="http://www.intavia.org/graphs/person-id-enrichment") # string
     entity_source_type = Parameter(
         "entity_source_type", default="http://www.cidoc-crm.org/cidoc-crm/E21_Person") # string
     entity_source_proxy_type = Parameter(
@@ -334,9 +344,9 @@ with Flow("Generate provided entity graph") as flow:
     start_time = get_start_time()
     sparql = setup_sparql_connection(endpoint)
     sparql2 = setup_sparql_connection(endpoint)
-    id_graph = get_sameas_statements(sparql2, entity_source_uris, entity_source_type, entity_source_proxy_type)
-    provided_entities = get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, provided_entity_type, entity_proxy_for_property)
-    entity_proxies = get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_source_type, entity_source_proxy_type, entity_proxy_for_property)
+    id_graph = get_sameas_statements(sparql2, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type)
+    provided_entities = get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, entity_linker_graph, provided_entity_type, entity_proxy_for_property)
+    entity_proxies = get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type, entity_proxy_for_property)
     provided_entities_graph = create_provided_entities_graph(
         sparql, id_graph, entity_enriched_uris, entity_source_type, entity_source_proxy_type, provided_entity_ns, provided_entity_type, entity_proxy_for_property, provided_entities, entity_proxies)
     res = update_target_graph(endpoint, target_graph, provided_entities_graph)
@@ -356,13 +366,14 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
 #    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
-#    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/person-id-enrichment'],
+#    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'],
+#    entity_linker_graph="http://www.intavia.org/graphs/person-id-enrichment",
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E21_Person",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Person_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/person-id-enrichment",
 #    provided_entity_ns="http://www.intavia.eu/provided_person/",
 #    provided_entity_type="http://www.intavia.eu/idm-core/Provided_Person",
-#    entity_proxy_for_property="http://www.intavia.eu/idm-core/person_proxy_for",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/proxy_for",
 #    target_graph='http://www.intavia.eu/graphs/provided_persons'
 #)
 
@@ -371,12 +382,29 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
 #    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
-#    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi', 'http://www.intavia.org/graphs/place-id-enrichment'],
+#    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi'],
+#    entity_linker_graph="http://www.intavia.org/graphs/place-id-enrichment",
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E53_Place",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Place_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/place-id-enrichment",
 #    provided_entity_ns="http://www.intavia.eu/provided_place/",
 #    provided_entity_type="http://www.intavia.eu/idm-core/Provided_Place",
-#    entity_proxy_for_property="http://www.intavia.eu/idm-core/place_proxy_for",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/proxy_for",
 #    target_graph='http://www.intavia.eu/graphs/provided_places'
+#)
+
+# Groups
+#flow.run(
+#    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    endpoint='http://localhost:9999/blazegraph/sparql',
+#    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
+#    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'],
+#    entity_linker_graph="http://www.intavia.org/graphs/group-id-enrichment",
+#    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E74_Group",
+#    entity_source_proxy_type="http://www.intavia.eu/idm-core/Group",
+#    entity_enriched_uris="http://www.intavia.org/graphs/group-id-enrichment",
+#    provided_entity_ns="http://www.intavia.eu/provided_group/",
+#    provided_entity_type="http://www.intavia.eu/idm-core/Provided_Group",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/proxy_for",
+#    target_graph='http://www.intavia.eu/graphs/provided_groups'
 #)
