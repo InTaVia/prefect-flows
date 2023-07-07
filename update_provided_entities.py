@@ -327,7 +327,7 @@ with Flow("Generate provided entity graph") as flow:
     provided_entity_type = Parameter(
         "provided_entity_type", default="http://www.intavia.eu/idm-core/Provided_Person") # string
     entity_proxy_for_property = Parameter(
-        "entity_proxy_for_property", default="http://www.intavia.eu/idm-core/person_proxy_for") # string
+        "entity_proxy_for_property", default="http://www.intavia.eu/idm-core/proxy_for") # string
     target_graph = Parameter(
         'target_graph', default='http://www.intavia.eu/graphs/provided_persons') # string
 
