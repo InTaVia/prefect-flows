@@ -45,10 +45,6 @@ def get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity
   }
   """
     logger.info(loadQuery)
-    sparql = SPARQLWrapper(endpoint)
-    sparql.setHTTPAuth("BASIC")
-    sparql.setCredentials(user=os.environ.get(
-        "RDFDB_USER"), passwd=os.environ.get("RDFDB_PASSWORD"))
 
     sparql.setQuery(loadQuery)
     results = sparql.queryAndConvert()
@@ -337,7 +333,8 @@ with Flow("Generate provided entity graph") as flow:
 
     start_time = get_start_time()
     sparql = setup_sparql_connection(endpoint)
-    id_graph = get_sameas_statements(sparql, entity_source_uris, entity_source_type, entity_source_proxy_type)
+    sparql2 = setup_sparql_connection(endpoint)
+    id_graph = get_sameas_statements(sparql2, entity_source_uris, entity_source_type, entity_source_proxy_type)
     provided_entities = get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, provided_entity_type, entity_proxy_for_property)
     entity_proxies = get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_source_type, entity_source_proxy_type, entity_proxy_for_property)
     provided_entities_graph = create_provided_entities_graph(
