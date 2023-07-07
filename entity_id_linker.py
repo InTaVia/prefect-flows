@@ -460,3 +460,14 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows", path="entity_id_linker.py")
 #    entity_proxy_class="http://www.intavia.eu/idm-core/Place_Proxy",
 #    target_file="intavia-place-id-enrichment.ttl" # parameter not needed for production
 #)
+
+# Groups
+#flow.run(
+#    environment="development",
+#    endpoint="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql",
+#    wd_endpoint="https://query.wikidata.org/sparql",
+#    target_graph="http://www.intavia.org/graphs/group-id-enrichment",
+#    entity_proxy_uri_prefix="http://www.intavia.eu/entity-id-linker/group_proxy_",
+#    entity_proxy_class="http://www.intavia.eu/idm-core/Group",
+#    target_file="intavia-group-id-enrichment.ttl" # parameter not needed for production
+#)
