@@ -258,10 +258,11 @@ def create_source_entities():
         entities.append(source_entity)
 
     # entity_enriched_uris
-    id_source = URIRef(IDM_PROV[flow_run_id + '/source/id_source'])
-    g.add( (id_source, RDF.type, PROV.Entity) )
-    g.add( (id_source, IDM_PROV.source_graph, URIRef(params['entity_enriched_uris'])))
-    entities.append(source_entity)
+    if (params['entity_enriched_uris'] != ""):
+        id_source = URIRef(IDM_PROV[flow_run_id + '/source/id_source'])
+        g.add( (id_source, RDF.type, PROV.Entity) )
+        g.add( (id_source, IDM_PROV.source_graph, URIRef(params['entity_enriched_uris'])))
+        entities.append(source_entity)
 
     return entities, g
 
@@ -324,8 +325,6 @@ with Flow("Generate provided entity graph") as flow:
     endpoint = Parameter(
         "endpoint", default="https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql") # string
     entity_source_uris = Parameter('entity_source_uris', default=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'])  # list
-    entity_linker_graph = Parameter(
-        "entity_linker_graph", default="http://www.intavia.org/graphs/person-id-enrichment") # string
     entity_source_type = Parameter(
         "entity_source_type", default="http://www.cidoc-crm.org/cidoc-crm/E21_Person") # string
     entity_source_proxy_type = Parameter(
@@ -344,9 +343,9 @@ with Flow("Generate provided entity graph") as flow:
     start_time = get_start_time()
     sparql = setup_sparql_connection(endpoint)
     sparql2 = setup_sparql_connection(endpoint)
-    id_graph = get_sameas_statements(sparql2, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type)
-    provided_entities = get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, entity_linker_graph, provided_entity_type, entity_proxy_for_property)
-    entity_proxies = get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_linker_graph, entity_source_type, entity_source_proxy_type, entity_proxy_for_property)
+    id_graph = get_sameas_statements(sparql2, entity_source_uris, entity_enriched_uris, entity_source_type, entity_source_proxy_type)
+    provided_entities = get_existing_provided_entities_with_unmapped_proxies(sparql, entity_source_uris, entity_enriched_uris, provided_entity_type, entity_proxy_for_property)
+    entity_proxies = get_unmapped_proxies_without_existing_provided_entities(sparql, entity_source_uris, entity_enriched_uris, entity_source_type, entity_source_proxy_type, entity_proxy_for_property)
     provided_entities_graph = create_provided_entities_graph(
         sparql, id_graph, entity_enriched_uris, entity_source_type, entity_source_proxy_type, provided_entity_ns, provided_entity_type, entity_proxy_for_property, provided_entities, entity_proxies)
     res = update_target_graph(endpoint, target_graph, provided_entities_graph)
@@ -367,7 +366,6 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
 #    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'],
-#    entity_linker_graph="http://www.intavia.org/graphs/person-id-enrichment",
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E21_Person",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Person_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/person-id-enrichment",
@@ -383,7 +381,6 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
 #    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://data.biographynet.nl/places2wikidata/', 'http://www.intavia.eu/sbi'],
-#    entity_linker_graph="http://www.intavia.org/graphs/place-id-enrichment",
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E53_Place",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Place_Proxy",
 #    entity_enriched_uris="http://www.intavia.org/graphs/place-id-enrichment",
@@ -399,7 +396,6 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    endpoint='http://localhost:9999/blazegraph/sparql',
 #    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
 #    entity_source_uris=['http://apis.acdh.oeaw.ac.at/data/v5', 'http://ldf.fi/nbf/data', 'http://data.biographynet.nl', 'http://www.intavia.eu/sbi'],
-#    entity_linker_graph="http://www.intavia.org/graphs/group-id-enrichment",
 #    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E74_Group",
 #    entity_source_proxy_type="http://www.intavia.eu/idm-core/Group",
 #    entity_enriched_uris="http://www.intavia.org/graphs/group-id-enrichment",
@@ -408,3 +404,19 @@ flow.storage = GitHub(repo="InTaVia/prefect-flows",
 #    entity_proxy_for_property="http://www.intavia.eu/idm-core/proxy_for",
 #    target_graph='http://www.intavia.eu/graphs/provided_groups'
 #)
+
+# CHO's
+#flow.run(
+#    #endpoint='http://localhost:9999/blazegraph/namespace/intavia/sparql',
+#    endpoint='http://localhost:9999/blazegraph/sparql',
+#    #endpoint='https://triplestore.acdh-dev.oeaw.ac.at/intavia/sparql',
+#    entity_source_uris=['http://data.acdh.oeaw.ac.at/intavia/cho/v6'],
+#    entity_source_type="http://www.cidoc-crm.org/cidoc-crm/E24_Physical_Human_Made_Thing",
+#    entity_source_proxy_type="http://www.intavia.eu/idm-core/CHO_Proxy",
+#    entity_enriched_uris="",
+#    provided_entity_ns="http://www.intavia.eu/provided_cho/",
+#    provided_entity_type="http://www.intavia.eu/idm-core/Provided_CHO",
+#    entity_proxy_for_property="http://www.intavia.eu/idm-core/proxy_for",
+#    target_graph='http://www.intavia.eu/graphs/provided_cho'
+#)
+ 
