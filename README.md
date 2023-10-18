@@ -19,6 +19,9 @@ In the current setup the InTaVia Knowledge Graph uses a blazegraph triplestore i
 ## Person id linker(available in a first version)
 This plugin uses reference resources URIs (such as GND and wikidata) to find the corresponding person in wikidata.org. In a second step it uses the wikidata object to retrieve missing reference resource URIs and adds them to the KB. This is an important step as datasets very often use different reference resources to identify entities in there datasets. E.g. the Austrian data (ÖBL) uses GND identifiers, while BiographySampo uses wikidata.
 
+## Update provided entities
+This workflows created provided entity instances and reconciles proxy entities based on shared reference resource URIs. I.e. if two entities are linked to a same reference resource URI (such as GND or Wikidata) they are connected to the same provided entity.
+
 ## Enrich cho data (available in a first version)
 This plugin uses the wikidata identifier added by the "Person id linker" plugin to search wikidata for persons and then downloads cultural heritage objects linked to these persons from wikidata. Before ingesting it into the InTaVia KB it converts the data to the IDM-RDF datamodel. To avoid timeouts it has a configurable number of persons it works on in parallel and it also allows to set the target named graph.
 
