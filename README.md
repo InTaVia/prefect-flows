@@ -16,8 +16,8 @@ The ingest workflows (only the mock data one is currently published) downloads d
 ## Inference workflow(available in a first version)
 In the current setup the InTaVia Knowledge Graph uses a blazegraph triplestore in quad mode (to allow for named graphs). Blazegraph does not allow for inference in quad mode, we therefore generate inference triples with this plugin and push them to the triplestore.
 
-## Person id linker(available in a first version)
-This plugin uses reference resources URIs (such as GND and wikidata) to find the corresponding person in wikidata.org. In a second step it uses the wikidata object to retrieve missing reference resource URIs and adds them to the KB. This is an important step as datasets very often use different reference resources to identify entities in there datasets. E.g. the Austrian data (ÖBL) uses GND identifiers, while BiographySampo uses wikidata.
+## Entity id linker (available in a first version)
+This plugin uses reference resources URIs (such as GND and Wikidata) to find the corresponding entity in wikidata.org. In a second step it uses the Wikidata object to retrieve missing reference resource URIs and adds them to the KB. This is an important step as datasets very often use different reference resources to identify entities in the dataset. E.g. the Austrian data (ÖBL) uses GND identifiers, while BiographySampo uses Wikidata.
 
 ## Update provided entities
 This workflows created provided entity instances and reconciles proxy entities based on shared reference resource URIs. I.e. if two entities are linked to a same reference resource URI (such as GND or Wikidata) they are connected to the same provided entity.
